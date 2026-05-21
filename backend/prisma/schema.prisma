@@ -44,6 +44,7 @@ model Order {
   table_session_id String
   table_session    TableSession @relation(fields: [table_session_id], references: [id])
   status           String       @default("pending") // pending, preparing, ready, delivered, canceled
+  comanda_number   String?
   total_amount     Float        @default(0)
   created_at       DateTime     @default(now())
   items            OrderItem[]

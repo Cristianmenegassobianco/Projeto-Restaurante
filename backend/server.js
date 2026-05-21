@@ -17,6 +17,12 @@ const JWT_SECRET = 'super-secret-restaurant-key-for-dev'; // Em prod, usar .env
 app.use(cors());
 app.use(express.json());
 
+// Logger middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // --- ROUTES ---
 
 // 1. Healthcheck
@@ -71,7 +77,7 @@ app.post('/api/session/init', async (req, res) => {
 
 // 4. Create Order
 app.post('/api/orders', async (req, res) => {
-  const { session_id, items, total_amount } = req.body;
+  const { session_id, items, total_amount, comanda_number } = req.body;
   
   if (!session_id || !items || items.length === 0) {
     return res.status(400).json({ error: 'Invalid order data' });
@@ -82,6 +88,7 @@ app.post('/api/orders', async (req, res) => {
       data: {
         table_session_id: session_id,
         total_amount,
+        comanda_number: comanda_number || null,
         items: {
           create: items.map(item => ({
             product_id: item.product_id,
@@ -114,7 +121,7 @@ app.get('/api/kitchen/orders', async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       where: {
-        status: { in: ['pending', 'preparing'] }
+        status: { in: ['pending', 'preparing', 'ready'] }
       },
       include: {
         items: { include: { product: true } },
@@ -149,6 +156,102 @@ app.put('/api/orders/:id/status', async (req, res) => {
     res.json(order);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update order status' });
+  }
+});
+
+// 7. Products: Create new product
+app.post('/api/products', async (req, res) => {
+  const { category_id, name, description, price, image_url } = req.body;
+  if (!category_id || !name || price === undefined) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  try {
+    const product = await prisma.product.create({
+      data: {
+        category_id,
+        name,
+        description,
+        price: parseFloat(price),
+        image_url,
+        is_available: true
+      }
+    });
+    res.json(product);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to create product' });
+  }
+});
+
+// 8. Products: Toggle availability
+app.put('/api/products/:id/toggle', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await prisma.product.findUnique({ where: { id } });
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    const updated = await prisma.product.update({
+      where: { id },
+      data: { is_available: !product.is_available }
+    });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to toggle product availability' });
+  }
+});
+
+// 9. Products: Delete product
+app.delete('/api/products/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.product.delete({ where: { id } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete product' });
+  }
+});
+
+// 10. Categories: Get list
+app.get('/api/categories', async (req, res) => {
+  try {
+    const categories = await prisma.category.findMany({
+      orderBy: { sort_order: 'asc' }
+    });
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+// 11. Admin: Get all menu categories and products (including unavailable ones)
+app.get('/api/admin/menu', async (req, res) => {
+  try {
+    const categories = await prisma.category.findMany({
+      include: {
+        products: true
+      },
+      orderBy: { sort_order: 'asc' }
+    });
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch admin menu' });
+  }
+});
+
+// 12. Client: Get orders for a session
+app.get('/api/sessions/:session_id/orders', async (req, res) => {
+  const { session_id } = req.params;
+  try {
+    const orders = await prisma.order.findMany({
+      where: { table_session_id: session_id },
+      include: {
+        items: { include: { product: true } }
+      },
+      orderBy: { created_at: 'desc' }
+    });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch session orders' });
   }
 });
 

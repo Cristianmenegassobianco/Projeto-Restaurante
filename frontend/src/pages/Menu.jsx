@@ -4,23 +4,37 @@ import { useNavigate } from 'react-router-dom';
 export default function Menu() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/menu')
-      .then(res => res.json())
+    fetch('/api/menu')
+      .then(res => {
+        if (!res.ok) throw new Error('Falha ao carregar o cardápio.');
+        return res.json();
+      })
       .then(data => {
         setCategories(data);
         setLoading(false);
       })
       .catch(err => {
         console.error(err);
+        setError(err.message);
         setLoading(false);
       });
   }, []);
 
   if (loading) {
     return <div className="container" style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>Carregando cardápio...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="container" style={{ textAlign: 'center', marginTop: '50px' }}>
+        <p style={{ color: 'var(--danger)' }}>Erro: {error}</p>
+        <button className="btn btn-outline mt-4" onClick={() => window.location.reload()}>Tentar Novamente</button>
+      </div>
+    );
   }
 
   return (

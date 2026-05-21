@@ -16,7 +16,7 @@ export default function Home() {
     setLoading(true);
     try {
       // Mock da chamada ao backend
-      const res = await fetch('http://localhost:3000/api/session/init', {
+      const res = await fetch('/api/session/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ table_number: tableNumber })
@@ -63,11 +63,13 @@ export default function Home() {
           </div>
           
           <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Conectando...' : (
-              <>
-                <QrCode size={20} style={{ marginRight: '8px' }} />
-                Acessar Cardápio
-              </>
+            {loading ? (
+              <span>Conectando...</span>
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <QrCode size={20} />
+                <span>Acessar Cardápio</span>
+              </span>
             )}
           </button>
         </form>
