@@ -11,12 +11,48 @@ export default function Product() {
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
 
-  if (!state?.product) return <Navigate to="/menu" />;
+  const session = useStore(s => s.session);
+  const setSession = useStore(s => s.setSession);
+  const [showTableModal, setShowTableModal] = useState(false);
+  const [tableNumber, setTableNumber] = useState('');
+  const [loadingSession, setLoadingSession] = useState(false);
+
+  if (!state?.product) return <Navigate to="/" />;
   const product = state.product;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
+    if (!session) {
+      setShowTableModal(true);
+      return;
+    }
     addToCart(product, quantity, notes);
-    navigate(-1); // Volta para o cardápio
+    navigate(-1);
+  };
+
+  const handleSessionSubmit = async (e) => {
+    e.preventDefault();
+    if (!tableNumber) return;
+    setLoadingSession(true);
+    try {
+      const res = await fetch('/api/session/init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table_number: parseInt(tableNumber) })
+      });
+      const data = await res.json();
+      if (data.token) {
+        setSession(data);
+        addToCart(product, quantity, notes);
+        setShowTableModal(false);
+        navigate('/');
+      } else {
+        alert('Erro ao iniciar sessão.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de conexão com o restaurante.');
+    }
+    setLoadingSession(false);
   };
 
   return (
@@ -85,6 +121,49 @@ export default function Product() {
           </button>
         </div>
       </div>
+
+      {/* MODAL INFORMAR MESA */}
+      {showTableModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(10, 10, 12, 0.95)', zIndex: 1000,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '24px', background: 'var(--bg-card)' }}>
+            <h3 style={{ color: 'var(--primary)', marginBottom: '12px', textAlign: 'center' }}>Número da Mesa</h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '20px', textAlign: 'center' }}>
+              Por favor, informe a sua mesa para podermos enviar o pedido corretamente.
+            </p>
+            
+            <form onSubmit={handleSessionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <input 
+                type="number" 
+                placeholder="Ex: 5" 
+                value={tableNumber}
+                onChange={e => setTableNumber(e.target.value)}
+                style={{
+                  width: '100%', padding: '12px', borderRadius: '8px',
+                  border: '1px solid var(--border)', background: 'var(--bg-dark)',
+                  color: 'white', fontSize: '1rem', outline: 'none', textAlign: 'center'
+                }}
+                required
+              />
+              <button type="submit" className="btn btn-primary" disabled={loadingSession}>
+                {loadingSession ? 'Conectando...' : 'Confirmar e Adicionar'}
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                onClick={() => setShowTableModal(false)}
+                style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}
+              >
+                Cancelar
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

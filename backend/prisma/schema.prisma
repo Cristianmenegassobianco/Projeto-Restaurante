@@ -36,6 +36,7 @@ model Product {
   price        Float
   image_url    String?
   is_available Boolean     @default(true)
+  is_featured  Boolean     @default(false)
   order_items  OrderItem[]
 }
 
@@ -59,4 +60,12 @@ model OrderItem {
   quantity   Int     @default(1)
   unit_price Float
   notes      String?
+}
+
+model Banner {
+  id        String  @id @default(uuid())
+  title     String
+  subtitle  String?
+  image_url String
+  badge     String?
 }

@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import { Check, ChefHat, PlusCircle, Trash2 } from 'lucide-react';
+import { Check, ChefHat, PlusCircle, Trash2, Image, Star } from 'lucide-react';
 
 export default function Kitchen() {
   const [orders, setOrders] = useState([]);
   const [menu, setMenu] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'products' | 'add'
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'products' | 'add' | 'banners' | 'featured'
+
+  // Banner state
+  const [banners, setBanners] = useState([]);
+  const [newBannerTitle, setNewBannerTitle] = useState('');
+  const [newBannerSubtitle, setNewBannerSubtitle] = useState('');
+  const [newBannerImageUrl, setNewBannerImageUrl] = useState('');
+  const [newBannerBadge, setNewBannerBadge] = useState('');
+  const [bannerLoading, setBannerLoading] = useState(false);
+  const [confirmDeleteBannerId, setConfirmDeleteBannerId] = useState(null);
 
   // Add Product Form State
   const [newProductName, setNewProductName] = useState('');
@@ -43,10 +52,13 @@ export default function Kitchen() {
     return () => socket.disconnect();
   }, []);
 
-  // Carregar cardápio e categorias quando mudar para as abas de admin
+  // Carregar dados com base na aba ativa
   useEffect(() => {
-    if (activeTab === 'products' || activeTab === 'add') {
+    if (activeTab === 'products' || activeTab === 'add' || activeTab === 'featured') {
       fetchMenuAndCategories();
+    }
+    if (activeTab === 'banners') {
+      fetchBanners();
     }
   }, [activeTab]);
 
@@ -148,6 +160,74 @@ export default function Kitchen() {
     }
   };
 
+  const fetchBanners = async () => {
+    try {
+      const res = await fetch('/api/banners');
+      const data = await res.json();
+      setBanners(data);
+    } catch (err) {
+      console.error('Erro ao carregar banners:', err);
+    }
+  };
+
+  const handleAddBanner = async (e) => {
+    e.preventDefault();
+    if (!newBannerTitle || !newBannerImageUrl) {
+      alert('Título e URL da imagem são obrigatórios.');
+      return;
+    }
+    setBannerLoading(true);
+    try {
+      const res = await fetch('/api/banners', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newBannerTitle,
+          subtitle: newBannerSubtitle,
+          image_url: newBannerImageUrl,
+          badge: newBannerBadge
+        })
+      });
+      if (res.ok) {
+        setNewBannerTitle('');
+        setNewBannerSubtitle('');
+        setNewBannerImageUrl('');
+        setNewBannerBadge('');
+        fetchBanners();
+      } else {
+        alert('Erro ao adicionar banner.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de conexão.');
+    }
+    setBannerLoading(false);
+  };
+
+  const handleDeleteBanner = async (id) => {
+    try {
+      await fetch(`/api/banners/${id}`, { method: 'DELETE' });
+      setConfirmDeleteBannerId(null);
+      fetchBanners();
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao remover banner.');
+    }
+  };
+
+  const toggleFeatured = async (productId, currentValue) => {
+    try {
+      await fetch(`/api/products/${productId}/featured`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_featured: !currentValue })
+      });
+      fetchMenuAndCategories();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div style={{ padding: '20px', minHeight: '100vh', background: 'var(--bg-dark)' }}>
       {/* HEADER */}
@@ -199,6 +279,32 @@ export default function Kitchen() {
         >
           <PlusCircle size={16} />
           Adicionar Produto
+        </button>
+        <button 
+          onClick={() => setActiveTab('banners')}
+          className="btn"
+          style={{
+            padding: '10px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.95rem',
+            background: activeTab === 'banners' ? 'var(--primary)' : 'var(--bg-card)',
+            color: 'white', fontWeight: activeTab === 'banners' ? 'bold' : 'normal',
+            display: 'flex', alignItems: 'center', gap: '6px'
+          }}
+        >
+          <Image size={16} />
+          Banners
+        </button>
+        <button 
+          onClick={() => setActiveTab('featured')}
+          className="btn"
+          style={{
+            padding: '10px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '0.95rem',
+            background: activeTab === 'featured' ? 'var(--primary)' : 'var(--bg-card)',
+            color: 'white', fontWeight: activeTab === 'featured' ? 'bold' : 'normal',
+            display: 'flex', alignItems: 'center', gap: '6px'
+          }}
+        >
+          <Star size={16} />
+          Destaques
         </button>
       </div>
 
@@ -464,6 +570,158 @@ export default function Kitchen() {
           </form>
         </div>
       )}
+
+      {/* CONTEÚDO 4: BANNERS DO CARROSSEL */}
+      {activeTab === 'banners' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '700px' }}>
+          {/* Formulário de novo banner */}
+          <div className="card" style={{ padding: '20px' }}>
+            <h2 style={{ color: 'var(--primary)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Image size={20} /> Adicionar Banner
+            </h2>
+            <form onSubmit={handleAddBanner} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Título *</label>
+                  <input
+                    type="text" placeholder="Ex: Combo do Dia"
+                    value={newBannerTitle} onChange={e => setNewBannerTitle(e.target.value)}
+                    style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Badge (ex: 🔥 Destaque)</label>
+                  <input
+                    type="text" placeholder="Ex: O Mais Pedido 🔥"
+                    value={newBannerBadge} onChange={e => setNewBannerBadge(e.target.value)}
+                    style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Subtítulo</label>
+                <input
+                  type="text" placeholder="Ex: Hambúrguer + Fritas por R$ 45,90"
+                  value={newBannerSubtitle} onChange={e => setNewBannerSubtitle(e.target.value)}
+                  style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>URL da Imagem *</label>
+                <input
+                  type="url" placeholder="https://images.unsplash.com/..."
+                  value={newBannerImageUrl} onChange={e => setNewBannerImageUrl(e.target.value)}
+                  style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }}
+                  required
+                />
+              </div>
+              {newBannerImageUrl && (
+                <img src={newBannerImageUrl} alt="Preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border)' }} onError={e => e.target.style.display = 'none'} />
+              )}
+              <button type="submit" className="btn btn-primary" disabled={bannerLoading}>
+                {bannerLoading ? 'Salvando...' : 'Adicionar Banner'}
+              </button>
+            </form>
+          </div>
+
+          {/* Lista de banners existentes */}
+          <div className="card" style={{ padding: '20px' }}>
+            <h3 style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>Banners Ativos ({banners.length})</h3>
+            {banners.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum banner cadastrado ainda.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {banners.map(banner => (
+                  <div key={banner.id} style={{ display: 'flex', gap: '12px', alignItems: 'center', padding: '10px', background: 'var(--bg-dark)', borderRadius: '8px', flexWrap: 'wrap' }}>
+                    <img src={banner.image_url} alt={banner.title} style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '6px', flexShrink: 0 }} />
+                    <div style={{ flex: 1, overflow: 'hidden', minWidth: '120px' }}>
+                      <div style={{ fontWeight: 'bold', color: 'white', fontSize: '0.95rem' }}>{banner.title}</div>
+                      {banner.badge && <div style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>{banner.badge}</div>}
+                      {banner.subtitle && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{banner.subtitle}</div>}
+                    </div>
+
+                    {/* Inline confirmation */}
+                    {confirmDeleteBannerId === banner.id ? (
+                      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                        <button
+                          onClick={() => handleDeleteBanner(banner.id)}
+                          style={{ padding: '6px 12px', background: 'var(--danger)', border: 'none', borderRadius: '6px', color: 'white', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.82rem' }}
+                        >
+                          Confirmar
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteBannerId(null)}
+                          style={{ padding: '6px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.82rem' }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteBannerId(banner.id)}
+                        style={{ padding: '8px', background: 'rgba(244,67,54,0.1)', border: '1px solid var(--danger)', borderRadius: '6px', color: 'var(--danger)', cursor: 'pointer', flexShrink: 0 }}
+                        title="Remover banner"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CONTEÚDO 5: PRODUTOS EM DESTAQUE */}
+      {activeTab === 'featured' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            Ative ou desative os produtos que aparecem na seção <strong style={{ color: 'white' }}>Destaques da Semana</strong> na página inicial do cliente.
+          </p>
+          {menu.map(category => (
+            <div key={category.id} className="card" style={{ padding: '20px' }}>
+              <h2 style={{ color: 'var(--primary)', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+                {category.name}
+              </h2>
+              {category.products.length === 0 ? (
+                <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum produto nesta categoria.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {category.products.map(product => (
+                    <div key={product.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: 'var(--bg-dark)', borderRadius: '8px', borderLeft: product.is_featured ? '3px solid var(--primary)' : '3px solid transparent' }}>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        {product.image_url && (
+                          <img src={product.image_url} alt={product.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
+                        )}
+                        <div>
+                          <div style={{ fontWeight: 'bold', color: 'white' }}>{product.name}</div>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>R$ {product.price.toFixed(2).replace('.', ',')}</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => toggleFeatured(product.id, product.is_featured)}
+                        style={{
+                          padding: '8px 14px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold',
+                          background: product.is_featured ? 'rgba(242, 133, 0, 0.15)' : 'var(--bg-card)',
+                          color: product.is_featured ? 'var(--primary)' : 'var(--text-muted)',
+                          border: `1px solid ${product.is_featured ? 'var(--primary)' : 'var(--border)'}`,
+                          display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s'
+                        }}
+                      >
+                        <Star size={14} fill={product.is_featured ? 'var(--primary)' : 'none'} />
+                        {product.is_featured ? 'Destaque Ativo' : 'Ativar Destaque'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
     </div>
   );
 }

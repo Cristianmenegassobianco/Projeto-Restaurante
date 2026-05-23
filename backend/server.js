@@ -14,6 +14,53 @@ const io = new Server(httpServer, {
 const prisma = new PrismaClient();
 const JWT_SECRET = 'super-secret-restaurant-key-for-dev'; // Em prod, usar .env
 
+async function seedDefaults() {
+  try {
+    const bannerCount = await prisma.banner.count();
+    if (bannerCount === 0) {
+      const defaultBanners = [
+        {
+          title: "Combo Artesanal",
+          subtitle: "Hambúrguer Blend + Fritas por R$ 45,90",
+          image_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600",
+          badge: "O Mais Pedido 🔥"
+        },
+        {
+          title: "Sucos Naturais",
+          subtitle: "Refresque-se com sucos feitos na hora",
+          image_url: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=600",
+          badge: "100% Natural 🍊"
+        },
+        {
+          title: "Porção de Batata Rústica",
+          subtitle: "Com cheddar cremoso e bacon crocante",
+          image_url: "https://images.unsplash.com/photo-1576107223847-c3b889505c21?w=600",
+          badge: "Destaque da Casa ⭐"
+        }
+      ];
+      for (const banner of defaultBanners) {
+        await prisma.banner.create({ data: banner });
+      }
+      console.log('Default banners seeded');
+    }
+
+    const featuredCount = await prisma.product.count({ where: { is_featured: true } });
+    if (featuredCount === 0) {
+      const firstProduct = await prisma.product.findFirst();
+      if (firstProduct) {
+        await prisma.product.update({
+          where: { id: firstProduct.id },
+          data: { is_featured: true }
+        });
+        console.log(`Default featured product set: ${firstProduct.name}`);
+      }
+    }
+  } catch (err) {
+    console.error('Error seeding defaults:', err);
+  }
+}
+seedDefaults();
+
 app.use(cors());
 app.use(express.json());
 
@@ -255,6 +302,70 @@ app.get('/api/sessions/:session_id/orders', async (req, res) => {
   }
 });
 
+// 13. Banners: Get list
+app.get('/api/banners', async (req, res) => {
+  try {
+    const banners = await prisma.banner.findMany();
+    res.json(banners);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch banners' });
+  }
+});
+
+// 14. Banners: Create new
+app.post('/api/banners', async (req, res) => {
+  const { title, subtitle, image_url, badge } = req.body;
+  if (!image_url || !title) {
+    return res.status(400).json({ error: 'Title and image_url are required' });
+  }
+  try {
+    const banner = await prisma.banner.create({
+      data: { title, subtitle, image_url, badge }
+    });
+    res.json(banner);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create banner' });
+  }
+});
+
+// 15. Banners: Delete
+app.delete('/api/banners/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.banner.delete({ where: { id } });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete banner' });
+  }
+});
+
+// 16. Products: Toggle featured status
+app.put('/api/products/:id/featured', async (req, res) => {
+  const { id } = req.params;
+  const { is_featured } = req.body;
+  try {
+    const updated = await prisma.product.update({
+      where: { id },
+      data: { is_featured: !!is_featured }
+    });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update product featured status' });
+  }
+});
+
+// 17. Products: Get featured ones
+app.get('/api/products/featured', async (req, res) => {
+  try {
+    const products = await prisma.product.findMany({
+      where: { is_featured: true, is_available: true }
+    });
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch featured products' });
+  }
+});
+
 // --- SOCKET.IO ---
 io.on('connection', (socket) => {
   console.log('A client connected:', socket.id);
@@ -265,6 +376,6 @@ io.on('connection', (socket) => {
 });
 
 const PORT = 3000;
-httpServer.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend server running on http://0.0.0.0:${PORT}`);
 });

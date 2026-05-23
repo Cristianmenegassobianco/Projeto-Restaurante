@@ -73,7 +73,7 @@ export default function Orders() {
     <div className="container" style={{ paddingBottom: '100px' }}>
       <header className="flex justify-between items-center mb-6">
         <h2>Meus Pedidos</h2>
-        <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem' }} onClick={() => navigate('/menu')}>
+        <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem' }} onClick={() => navigate('/')}>
           + Novo Pedido
         </button>
       </header>
@@ -81,7 +81,7 @@ export default function Orders() {
       {orders.length === 0 ? (
         <div style={{ textAlign: 'center', marginTop: '40px', color: 'var(--text-muted)' }}>
           <p>Nenhum pedido realizado ainda nesta mesa.</p>
-          <button className="btn btn-primary mt-4" onClick={() => navigate('/menu')}>Ver Cardápio</button>
+          <button className="btn btn-primary mt-4" onClick={() => navigate('/')}>Ver Cardápio</button>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

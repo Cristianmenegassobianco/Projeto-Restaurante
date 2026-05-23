@@ -92,7 +92,7 @@ export default function Cart() {
     return (
       <div className="container" style={{ textAlign: 'center', marginTop: '60px' }}>
         <h3 style={{ color: 'var(--text-muted)' }}>Sua comanda está vazia</h3>
-        <button className="btn btn-primary mt-4" onClick={() => navigate('/menu')}>
+        <button className="btn btn-primary mt-4" onClick={() => navigate('/')}>
           Ver Cardápio
         </button>
       </div>

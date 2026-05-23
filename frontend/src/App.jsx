@@ -20,19 +20,14 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         
-        {/* Rotas protegidas (necessitam de sessão da mesa) */}
-        <Route path="/menu" element={
-          <PrivateRoute>
-            <Header title="Cardápio" showCart={true} />
-            <Menu />
-          </PrivateRoute>
-        } />
+        {/* Redireciona /menu antigo para a nova home */}
+        <Route path="/menu" element={<Navigate to="/" replace />} />
         
         <Route path="/product/:id" element={
-          <PrivateRoute>
+          <>
             <Header title="Detalhes" showBack={true} showCart={true} />
             <Product />
-          </PrivateRoute>
+          </>
         } />
         
         <Route path="/cart" element={
