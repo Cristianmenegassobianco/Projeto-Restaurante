@@ -33,7 +33,9 @@ export default function Kitchen() {
       .catch(err => console.error(err));
 
     // 2. Conectar socket para pedidos em tempo real
-    const socket = io();
+    const socket = io(import.meta.env.VITE_API_URL || '', {
+      path: '/socket.io'
+    });
     
     socket.on('new_order', (order) => {
       setOrders(prev => [...prev, order]);

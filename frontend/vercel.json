@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:match*",
+      "destination": "https://BACKEND_URL/api/:match*"
+    },
+    {
+      "source": "/socket.io/:match*",
+      "destination": "https://BACKEND_URL/socket.io/:match*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

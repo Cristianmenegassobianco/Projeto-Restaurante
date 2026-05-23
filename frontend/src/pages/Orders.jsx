@@ -26,7 +26,9 @@ export default function Orders() {
       });
 
     // 2. Escutar atualizações e novos pedidos em tempo real
-    const socket = io();
+    const socket = io(import.meta.env.VITE_API_URL || '', {
+      path: '/socket.io'
+    });
     
     socket.on('new_order', (order) => {
       if (order.table_session_id === session.session_id) {
