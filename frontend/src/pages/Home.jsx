@@ -64,7 +64,11 @@ export default function Home() {
     fetch('/api/products/featured')
       .then(res => res.json())
       .then(data => {
-        setWeeklyHighlights(data);
+        if (Array.isArray(data)) {
+          setWeeklyHighlights(data);
+        } else {
+          setWeeklyHighlights([]);
+        }
       })
       .catch(err => console.error(err));
 
@@ -72,7 +76,11 @@ export default function Home() {
     fetch('/api/banners')
       .then(res => res.json())
       .then(data => {
-        setBanners(data);
+        if (Array.isArray(data)) {
+          setBanners(data);
+        } else {
+          setBanners([]);
+        }
         setLoading(false);
       })
       .catch(err => {

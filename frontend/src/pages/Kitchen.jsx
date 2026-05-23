@@ -33,7 +33,13 @@ export default function Kitchen() {
     // 1. Carregar pedidos iniciais
     fetch('/api/kitchen/orders')
       .then(res => res.json())
-      .then(data => setOrders(data))
+      .then(data => {
+        if (Array.isArray(data)) {
+          setOrders(data);
+        } else {
+          setOrders([]);
+        }
+      })
       .catch(err => console.error(err));
 
     // 2. Conectar socket para pedidos em tempo real
@@ -205,7 +211,11 @@ export default function Kitchen() {
     try {
       const res = await fetch('/api/banners');
       const data = await res.json();
-      setBanners(data);
+      if (Array.isArray(data)) {
+        setBanners(data);
+      } else {
+        setBanners([]);
+      }
     } catch (err) {
       console.error('Erro ao carregar banners:', err);
     }
