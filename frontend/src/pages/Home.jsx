@@ -52,7 +52,11 @@ export default function Home() {
         return res.json();
       })
       .then(data => {
-        setCategories(data);
+        if (Array.isArray(data)) {
+          setCategories(data);
+        } else {
+          setCategories([]);
+        }
       })
       .catch(err => console.error(err));
 

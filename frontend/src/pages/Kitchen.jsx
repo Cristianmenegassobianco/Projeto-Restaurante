@@ -72,13 +72,21 @@ export default function Kitchen() {
     try {
       const menuRes = await fetch('/api/admin/menu');
       const menuData = await menuRes.json();
-      setMenu(menuData);
+      if (Array.isArray(menuData)) {
+        setMenu(menuData);
+      } else {
+        setMenu([]);
+      }
 
       const catRes = await fetch('/api/categories');
       const catData = await catRes.json();
-      setCategories(catData);
-      if (catData.length > 0 && !newProductCategoryId) {
-        setNewProductCategoryId(catData[0].id);
+      if (Array.isArray(catData)) {
+        setCategories(catData);
+        if (catData.length > 0 && !newProductCategoryId) {
+          setNewProductCategoryId(catData[0].id);
+        }
+      } else {
+        setCategories([]);
       }
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
