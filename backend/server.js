@@ -270,6 +270,25 @@ app.get('/api/categories', async (req, res) => {
   }
 });
 
+// 10.1 Categories: Create new
+app.post('/api/categories', async (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: 'Name is required' });
+  
+  try {
+    const count = await prisma.category.count();
+    const category = await prisma.category.create({
+      data: {
+        name,
+        sort_order: count + 1
+      }
+    });
+    res.json(category);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create category' });
+  }
+});
+
 // 11. Admin: Get all menu categories and products (including unavailable ones)
 app.get('/api/admin/menu', async (req, res) => {
   try {

@@ -25,6 +25,10 @@ export default function Kitchen() {
   const [newProductImageUrl, setNewProductImageUrl] = useState('');
   const [formLoading, setFormLoading] = useState(false);
 
+  // Add Category Form State
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [categoryLoading, setCategoryLoading] = useState(false);
+
   useEffect(() => {
     // 1. Carregar pedidos iniciais
     fetch('/api/kitchen/orders')
@@ -159,6 +163,33 @@ export default function Kitchen() {
       alert('Erro de conexão ao adicionar produto.');
     } finally {
       setFormLoading(false);
+    }
+  };
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategoryName) return;
+    setCategoryLoading(true);
+    
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newCategoryName })
+      });
+
+      if (res.ok) {
+        alert('Categoria adicionada com sucesso!');
+        setNewCategoryName('');
+        fetchMenuAndCategories(); // Atualiza a lista
+      } else {
+        alert('Erro ao adicionar categoria.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de conexão ao adicionar categoria.');
+    } finally {
+      setCategoryLoading(false);
     }
   };
 
@@ -478,10 +509,42 @@ export default function Kitchen() {
         </div>
       )}
 
-      {/* CONTEÚDO 3: ADICIONAR PRODUTO */}
+      {/* CONTEÚDO 3: ADICIONAR PRODUTO E CATEGORIA */}
       {activeTab === 'add' && (
-        <div className="card" style={{ maxWidth: '600px', margin: '0 auto', padding: '24px' }}>
-          <h2 className="mb-4" style={{ color: 'var(--primary)' }}>Adicionar Novo Produto</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '600px', margin: '0 auto' }}>
+          
+          {/* Formulário de Categoria */}
+          <div className="card" style={{ padding: '24px' }}>
+            <h2 className="mb-4" style={{ color: 'var(--primary)' }}>Criar Nova Categoria</h2>
+            <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Nome da Categoria *</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: Sobremesas"
+                  value={newCategoryName}
+                  onChange={e => setNewCategoryName(e.target.value)}
+                  style={{
+                    width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)',
+                    background: 'var(--bg-dark)', color: 'white', outline: 'none'
+                  }}
+                  required
+                />
+              </div>
+              <button 
+                type="submit" 
+                className="btn btn-primary" 
+                disabled={categoryLoading}
+                style={{ padding: '10px 20px', height: '42px' }}
+              >
+                {categoryLoading ? 'Criando...' : 'Adicionar'}
+              </button>
+            </form>
+          </div>
+
+          {/* Formulário de Produto */}
+          <div className="card" style={{ padding: '24px' }}>
+            <h2 className="mb-4" style={{ color: 'var(--primary)' }}>Adicionar Novo Produto</h2>
           
           <form onSubmit={handleAddProduct} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
@@ -570,6 +633,7 @@ export default function Kitchen() {
               {formLoading ? 'Adicionando...' : 'Salvar Produto'}
             </button>
           </form>
+          </div>
         </div>
       )}
 
