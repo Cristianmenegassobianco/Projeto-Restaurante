@@ -285,6 +285,7 @@ app.post('/api/categories', async (req, res) => {
     });
     res.json(category);
   } catch (error) {
+    console.error('Category creation error:', error);
     res.status(500).json({ error: 'Failed to create category' });
   }
 });
