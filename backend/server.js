@@ -73,6 +73,10 @@ app.use((req, res, next) => {
 // --- ROUTES ---
 
 // 1. Healthcheck
+app.get('/', (req, res) => {
+  res.send('Backend is running!');
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
