@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
-import { Check, ChefHat, PlusCircle, Trash2, Image, Star } from 'lucide-react';
+import { Check, ChefHat, PlusCircle, Trash2, Image, Star, Edit, X } from 'lucide-react';
 
 export default function Kitchen() {
   const [orders, setOrders] = useState([]);
@@ -23,7 +23,12 @@ export default function Kitchen() {
   const [newProductPrice, setNewProductPrice] = useState('');
   const [newProductDescription, setNewProductDescription] = useState('');
   const [newProductImageUrl, setNewProductImageUrl] = useState('');
+  const [newProductImageUrl, setNewProductImageUrl] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+
+  // Edit Product State
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editProductLoading, setEditProductLoading] = useState(false);
 
   // Add Category Form State
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -168,6 +173,7 @@ export default function Kitchen() {
         setNewProductPrice('');
         setNewProductDescription('');
         setNewProductImageUrl('');
+        fetchMenuAndCategories();
         setActiveTab('products'); // Volta para a aba de produtos
       } else {
         alert('Erro ao adicionar produto.');
@@ -177,6 +183,39 @@ export default function Kitchen() {
       alert('Erro de conexão ao adicionar produto.');
     } finally {
       setFormLoading(false);
+    }
+  };
+
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    
+    setEditProductLoading(true);
+    try {
+      const res = await fetch(`/api/products/${editingProduct.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editingProduct.name,
+          category_id: editingProduct.category_id,
+          price: parseFloat(editingProduct.price),
+          description: editingProduct.description || '',
+          image_url: editingProduct.image_url || ''
+        })
+      });
+
+      if (res.ok) {
+        alert('Produto atualizado com sucesso!');
+        setEditingProduct(null);
+        fetchMenuAndCategories();
+      } else {
+        alert('Erro ao atualizar produto.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de conexão ao atualizar produto.');
+    } finally {
+      setEditProductLoading(false);
     }
   };
 
@@ -508,12 +547,24 @@ export default function Kitchen() {
                           {product.is_available ? 'Disponível' : 'Indisponível'}
                         </button>
                         <button
+                          onClick={() => setEditingProduct({...product, price: product.price.toString()})}
+                          style={{
+                            padding: '6px', borderRadius: '4px', border: 'none', cursor: 'pointer',
+                            background: 'rgba(255, 255, 255, 0.1)', color: 'white',
+                            border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}
+                          title="Editar Produto"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
                           onClick={() => deleteProduct(product.id)}
                           style={{
                             padding: '6px', borderRadius: '4px', border: 'none', cursor: 'pointer',
                             background: 'rgba(244, 67, 54, 0.1)', color: 'var(--danger)',
                             border: '1px solid var(--danger)', display: 'flex', alignItems: 'center', justifyContent: 'center'
                           }}
+                          title="Excluir Produto"
                         >
                           <Trash2 size={16} />
                         </button>
@@ -803,6 +854,120 @@ export default function Kitchen() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* MODAL DE EDIÇÃO DE PRODUTO */}
+      {editingProduct && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(10, 10, 12, 0.95)', zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div className="card" style={{ width: '100%', maxWidth: '500px', padding: '24px', position: 'relative', background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <button 
+              onClick={() => setEditingProduct(null)}
+              style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            >
+              <X size={24} />
+            </button>
+            <h2 className="mb-4" style={{ color: 'var(--primary)' }}>Editar Produto</h2>
+            
+            <form onSubmit={handleUpdateProduct} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Nome do Produto *</label>
+                <input 
+                  type="text" 
+                  value={editingProduct.name}
+                  onChange={e => setEditingProduct({...editingProduct, name: e.target.value})}
+                  style={{
+                    width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)',
+                    background: 'var(--bg-dark)', color: 'white', outline: 'none'
+                  }}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Categoria *</label>
+                  <select 
+                    value={editingProduct.category_id}
+                    onChange={e => setEditingProduct({...editingProduct, category_id: e.target.value})}
+                    style={{
+                      width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)',
+                      background: 'var(--bg-dark)', color: 'white', outline: 'none', height: '42px'
+                    }}
+                    required
+                  >
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Preço (R$) *</label>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    value={editingProduct.price}
+                    onChange={e => setEditingProduct({...editingProduct, price: e.target.value})}
+                    style={{
+                      width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)',
+                      background: 'var(--bg-dark)', color: 'white', outline: 'none'
+                    }}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>URL da Imagem</label>
+                <input 
+                  type="url" 
+                  value={editingProduct.image_url || ''}
+                  onChange={e => setEditingProduct({...editingProduct, image_url: e.target.value})}
+                  style={{
+                    width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)',
+                    background: 'var(--bg-dark)', color: 'white', outline: 'none'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Descrição</label>
+                <textarea 
+                  value={editingProduct.description || ''}
+                  onChange={e => setEditingProduct({...editingProduct, description: e.target.value})}
+                  style={{
+                    width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)',
+                    background: 'var(--bg-dark)', color: 'white', outline: 'none', minHeight: '80px'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-outline" 
+                  onClick={() => setEditingProduct(null)}
+                  style={{ flex: 1, borderColor: 'var(--border)', color: 'var(--text-main)' }}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  disabled={editProductLoading}
+                  style={{ flex: 1 }}
+                >
+                  {editProductLoading ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

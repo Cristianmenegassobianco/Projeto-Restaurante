@@ -251,6 +251,33 @@ app.put('/api/products/:id/toggle', async (req, res) => {
   }
 });
 
+// 8.1 Products: Update product details
+app.put('/api/products/:id', async (req, res) => {
+  const { id } = req.params;
+  const { category_id, name, description, price, image_url } = req.body;
+  
+  if (!category_id || !name || price === undefined) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const updated = await prisma.product.update({
+      where: { id },
+      data: {
+        category_id,
+        name,
+        description,
+        price: parseFloat(price),
+        image_url
+      }
+    });
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update product' });
+  }
+});
+
 // 9. Products: Delete product
 app.delete('/api/products/:id', async (req, res) => {
   const { id } = req.params;
