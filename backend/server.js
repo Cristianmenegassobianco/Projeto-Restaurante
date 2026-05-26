@@ -230,7 +230,7 @@ app.post('/api/products', async (req, res) => {
     res.json(product);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to create product' });
+    res.status(500).json({ error: 'Failed to create product', details: error.message });
   }
 });
 
