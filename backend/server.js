@@ -291,7 +291,7 @@ app.delete('/api/products/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to delete product' });
+    res.status(500).json({ error: 'Failed to delete product', details: error.message });
   }
 });
 
@@ -356,7 +356,7 @@ app.delete('/api/categories/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to delete category' });
+    res.status(500).json({ error: 'Failed to delete category', details: error.message });
   }
 });
 
