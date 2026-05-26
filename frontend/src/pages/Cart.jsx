@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import { Trash2 } from 'lucide-react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 
 export default function Cart() {
   const { cart, removeFromCart, clearCart, session } = useStore();
@@ -16,30 +16,49 @@ export default function Cart() {
   const total = cart.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
 
   useEffect(() => {
-    let scanner = null;
-    if (showScanner) {
-      // Inicia o scanner de QR Code no elemento com id="reader"
-      scanner = new Html5QrcodeScanner("reader", {
-        fps: 10,
-        qrbox: { width: 220, height: 220 },
-        rememberLastUsedCamera: true
-      }, false);
+    let html5QrCode = null;
+    let isScanning = false;
 
-      scanner.render(
-        (decodedText) => {
-          // Quando ler o QR Code com sucesso
-          onComandaScanned(decodedText);
-          scanner.clear().catch(err => console.error(err));
-        },
-        (error) => {
-          // Callback de erro silencioso do scan
-        }
-      );
+    if (showScanner) {
+      // Pequeno delay para garantir que a div "reader" esteja renderizada
+      setTimeout(() => {
+        html5QrCode = new Html5Qrcode("reader");
+        
+        html5QrCode.start(
+          { facingMode: "environment" }, // Força o uso da câmera traseira (mobile)
+          {
+            fps: 10,
+            qrbox: { width: 220, height: 220 },
+            aspectRatio: 1.0
+          },
+          (decodedText) => {
+            if (!isScanning) {
+              isScanning = true;
+              // Parar e limpar o scanner após leitura bem sucedida
+              html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                onComandaScanned(decodedText);
+              }).catch(err => {
+                console.error("Erro ao parar scanner:", err);
+                onComandaScanned(decodedText);
+              });
+            }
+          },
+          (error) => {
+            // Callback de erro de leitura contínua (silencioso)
+          }
+        ).catch((err) => {
+          console.error("Erro ao iniciar a câmera:", err);
+          alert("Não foi possível iniciar a câmera. Verifique as permissões.");
+        });
+      }, 100);
     }
 
     return () => {
-      if (scanner) {
-        scanner.clear().catch(err => console.error('Erro ao limpar scanner:', err));
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().then(() => {
+          html5QrCode.clear();
+        }).catch(err => console.error("Erro ao limpar scanner no unmount:", err));
       }
     };
   }, [showScanner]);
