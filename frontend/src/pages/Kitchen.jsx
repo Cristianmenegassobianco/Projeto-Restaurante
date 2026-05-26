@@ -23,7 +23,6 @@ export default function Kitchen() {
   const [newProductPrice, setNewProductPrice] = useState('');
   const [newProductDescription, setNewProductDescription] = useState('');
   const [newProductImageUrl, setNewProductImageUrl] = useState('');
-  const [newProductImageUrl, setNewProductImageUrl] = useState('');
   const [formLoading, setFormLoading] = useState(false);
 
   // Edit Product State
