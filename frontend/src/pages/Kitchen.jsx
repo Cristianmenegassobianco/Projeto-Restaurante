@@ -92,11 +92,17 @@ export default function Kitchen() {
       const catData = await catRes.json();
       if (Array.isArray(catData)) {
         setCategories(catData);
-        if (catData.length > 0 && !newProductCategoryId) {
-          setNewProductCategoryId(catData[0].id);
+        if (catData.length > 0) {
+          const exists = catData.some(c => c.id === newProductCategoryId);
+          if (!newProductCategoryId || !exists) {
+            setNewProductCategoryId(catData[0].id);
+          }
+        } else {
+          setNewProductCategoryId('');
         }
       } else {
         setCategories([]);
+        setNewProductCategoryId('');
       }
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
