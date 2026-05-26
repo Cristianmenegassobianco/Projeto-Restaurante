@@ -139,7 +139,23 @@ export default function Kitchen() {
       if (res.ok) {
         fetchMenuAndCategories();
       } else {
-        alert('Erro ao excluir produto. Ele pode estar associado a pedidos existentes.');
+        alert('Erro ao excluir produto.');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const deleteCategory = async (categoryId) => {
+    if (!confirm('Deseja realmente excluir esta categoria? Isso também excluirá todos os produtos dentro dela.')) return;
+    try {
+      const res = await fetch(`/api/categories/${categoryId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchMenuAndCategories();
+      } else {
+        alert('Erro ao excluir categoria.');
       }
     } catch (err) {
       console.error(err);
@@ -500,8 +516,29 @@ export default function Kitchen() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {menu.map(category => (
             <div key={category.id} className="card" style={{ padding: '20px' }}>
-              <h2 style={{ color: 'var(--primary)', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
-                {category.name}
+              <h2 style={{ color: 'var(--primary)', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>{category.name}</span>
+                <button
+                  onClick={() => deleteCategory(category.id)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--danger)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(244, 67, 54, 0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  title="Excluir Categoria"
+                >
+                  <Trash2 size={16} />
+                  <span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>Excluir Categoria</span>
+                </button>
               </h2>
               
               {category.products.length === 0 ? (

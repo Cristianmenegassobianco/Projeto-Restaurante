@@ -282,9 +282,15 @@ app.put('/api/products/:id', async (req, res) => {
 app.delete('/api/products/:id', async (req, res) => {
   const { id } = req.params;
   try {
+    // Delete associated OrderItems first to avoid foreign key constraints
+    await prisma.orderItem.deleteMany({
+      where: { product_id: id }
+    });
+
     await prisma.product.delete({ where: { id } });
     res.json({ success: true });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to delete product' });
   }
 });
@@ -318,6 +324,39 @@ app.post('/api/categories', async (req, res) => {
   } catch (error) {
     console.error('Category creation error:', error);
     res.status(500).json({ error: 'Failed to create category' });
+  }
+});
+
+// 10.2 Categories: Delete category (cascading products and order items)
+app.delete('/api/categories/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Find all products in this category
+    const products = await prisma.product.findMany({
+      where: { category_id: id }
+    });
+    
+    const productIds = products.map(p => p.id);
+    
+    // Delete all OrderItems for these products
+    await prisma.orderItem.deleteMany({
+      where: { product_id: { in: productIds } }
+    });
+    
+    // Delete all products
+    await prisma.product.deleteMany({
+      where: { category_id: id }
+    });
+    
+    // Delete the category
+    await prisma.category.delete({
+      where: { id }
+    });
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to delete category' });
   }
 });
 
