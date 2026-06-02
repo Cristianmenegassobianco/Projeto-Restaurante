@@ -6,7 +6,7 @@ let schema = fs.readFileSync(schemaPath, 'utf8');
 // Se o DATABASE_URL começar com postgres ou postgresql, mudamos o provider.
 const dbUrl = process.env.DATABASE_URL || '';
 
-if (dbUrl.startsWith('postgres') || process.env.RAILWAY_ENVIRONMENT) {
+if (dbUrl.startsWith('postgres')) {
   schema = schema.replace(/provider\s*=\s*"sqlite"/g, 'provider = "postgresql"');
   fs.writeFileSync(schemaPath, schema);
   console.log('🔄 setup-prisma: Changed provider to postgresql for production.');
