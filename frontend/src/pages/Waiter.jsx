@@ -530,7 +530,7 @@ export default function Waiter() {
                     {category.name}
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {category.products.map(product => {
+                    {category.products && category.products.map(product => {
                       const cartItem = cart.find(item => item.product.id === product.id);
                       const quantity = cartItem ? cartItem.quantity : 0;
                       
