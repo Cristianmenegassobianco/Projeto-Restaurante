@@ -1,24 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useStore from '../store/useStore';
-import { 
-  QrCode, 
-  UtensilsCrossed, 
-  ShoppingBag, 
-  ChevronRight, 
-  Star, 
-  Flame, 
-  PlusCircle, 
-  CheckCircle2, 
-  Sliders 
+import {
+  QrCode,
+  UtensilsCrossed,
+  BellRing,
+  Star,
+  Flame,
 } from 'lucide-react';
 
 export default function Home() {
-  const session = useStore(state => state.session);
-  const setSession = useStore(state => state.setSession);
-  const cart = useStore(state => state.cart);
-  const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-
   const navigate = useNavigate();
 
   // State
@@ -28,11 +18,11 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  
-  // Modal de Mesa
-  const [showTableModal, setShowTableModal] = useState(false);
-  const [tableNumber, setTableNumber] = useState('');
-  const [loadingSession, setLoadingSession] = useState(false);
+
+  // Chamar Garçom Modal
+  const [showWaiterModal, setShowWaiterModal] = useState(false);
+  const [tableNumber, setTableNumber] = useState(() => localStorage.getItem('clientTableNumber') || '');
+  const [callingWaiter, setCallingWaiter] = useState(false);
 
   // Auto-slide Carrossel
   useEffect(() => {
@@ -89,47 +79,35 @@ export default function Home() {
       });
   }, []);
 
-  // Iniciar sessão da mesa
-  const handleSessionSubmit = async (e) => {
+  const handleCallWaiter = async (e) => {
     e.preventDefault();
     if (!tableNumber) return;
-    setLoadingSession(true);
+    
+    setCallingWaiter(true);
     try {
-      const res = await fetch('/api/session/init', {
+      const res = await fetch('/api/call-waiter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ table_number: parseInt(tableNumber) })
+        body: JSON.stringify({ table_number: tableNumber })
       });
-      const data = await res.json();
-      if (data.token) {
-        setSession(data);
-        setShowTableModal(false);
+      
+      if (res.ok) {
+        localStorage.setItem('clientTableNumber', tableNumber);
+        alert('Garçom chamado com sucesso! Ele estará na sua mesa em breve.');
+        setShowWaiterModal(false);
       } else {
-        alert('Erro ao iniciar sessão.');
+        alert('Erro ao chamar o garçom. Tente novamente.');
       }
     } catch (err) {
       console.error(err);
-      alert('Erro de rede.');
+      alert('Erro de conexão ao chamar garçom.');
     }
-    setLoadingSession(false);
-  };
-
-  // Alternar ou configurar mesa
-  const handleTableBadgeClick = () => {
-    if (session) {
-      if (window.confirm(`Deseja encerrar ou trocar a Mesa ${session.table_number}?`)) {
-        setSession(null);
-        setTableNumber('');
-        setShowTableModal(true);
-      }
-    } else {
-      setShowTableModal(true);
-    }
+    setCallingWaiter(false);
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: '90px' }}>
-      
+
       {/* HEADER DE NAVEGAÇÃO SUPERIOR */}
       <header className="header" style={{ padding: '16px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -141,75 +119,37 @@ export default function Home() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Badge de Mesa */}
-          <button 
-            onClick={handleTableBadgeClick}
+          <button
+            onClick={() => setShowWaiterModal(true)}
             style={{
-              background: session ? 'rgba(46, 213, 115, 0.15)' : 'rgba(242, 133, 0, 0.15)',
-              border: `1px solid ${session ? 'var(--success)' : 'var(--primary)'}`,
-              color: session ? 'var(--success)' : 'var(--primary)',
+              background: 'var(--primary)',
+              border: 'none',
+              color: 'white',
               borderRadius: '20px',
-              padding: '6px 12px',
-              fontSize: '0.8rem',
+              padding: '8px 16px',
+              fontSize: '0.9rem',
               fontWeight: 'bold',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              transition: 'all 0.2s'
+              boxShadow: '0 4px 12px rgba(242, 133, 0, 0.3)'
             }}
           >
-            <span style={{
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              background: session ? 'var(--success)' : 'var(--primary)',
-              display: 'inline-block'
-            }}></span>
-            {session ? `Mesa ${session.table_number}` : 'Definir Mesa'}
-          </button>
-
-          {/* Carrinho de Compras */}
-          <button 
-            onClick={() => session ? navigate('/cart') : setShowTableModal(true)} 
-            style={{ 
-              background: 'var(--bg-card)', 
-              border: '1px solid var(--border)', 
-              color: 'var(--text-main)', 
-              cursor: 'pointer',
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative'
-            }}
-          >
-            <ShoppingBag size={20} />
-            {cartItemsCount > 0 && (
-              <span style={{
-                position: 'absolute', top: '-5px', right: '-5px',
-                background: 'var(--primary)', color: 'white',
-                borderRadius: '50%', width: '18px', height: '18px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.7rem', fontWeight: 'bold'
-              }}>
-                {cartItemsCount}
-              </span>
-            )}
+            <BellRing size={16} />
+            Chamar Garçom
           </button>
         </div>
       </header>
 
       {/* CONTAINER PRINCIPAL */}
       <div className="container" style={{ padding: '20px 20px 0 20px' }}>
-        
+
         {/* CARROSSEL DE BANNERS */}
         <div className="banner-carousel">
           {banners.length > 0 ? (
             banners.map((banner, index) => (
-              <div 
+              <div
                 key={banner.id}
                 className={`banner-slide ${index === currentSlide ? 'active' : ''}`}
                 style={{ backgroundImage: `url(${banner.image_url})` }}
@@ -250,7 +190,7 @@ export default function Home() {
           {/* Dots do Carrossel */}
           <div className="carousel-dots">
             {banners.map((_, index) => (
-              <button 
+              <button
                 key={index}
                 className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
                 onClick={() => setCurrentSlide(index)}
@@ -258,6 +198,7 @@ export default function Home() {
             ))}
           </div>
         </div>
+
 
         {/* PRODUTOS DA SEMANA (HIGHLIGHTS) */}
         <section style={{ marginBottom: '32px' }}>
@@ -274,14 +215,14 @@ export default function Home() {
           ) : (
             <div className="horizontal-scroll">
               {weeklyHighlights.map(product => (
-                <div 
+                <div
                   key={product.id}
                   className="highlight-card"
                   onClick={() => navigate(`/product/${product.id}`, { state: { product } })}
                 >
                   <div style={{ position: 'relative' }}>
-                    <img 
-                      src={product.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'} 
+                    <img
+                      src={product.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'}
                       alt={product.name}
                       style={{ width: '100%', height: '130px', objectFit: 'cover' }}
                     />
@@ -305,7 +246,6 @@ export default function Home() {
                       <span className="font-bold text-primary" style={{ fontSize: '1rem' }}>
                         R$ {product.price.toFixed(2).replace('.', ',')}
                       </span>
-                      <PlusCircle size={18} color="var(--primary)" />
                     </div>
                   </div>
                 </div>
@@ -319,16 +259,16 @@ export default function Home() {
           <div className="flex justify-between items-center mb-4">
             <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>Nosso Cardápio</h2>
           </div>
-          
+
           <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px', margin: '0 -20px', paddingLeft: '20px', paddingRight: '20px' }}>
-            <button 
+            <button
               className={`category-pill ${selectedCategory === 'all' ? 'active' : ''}`}
               onClick={() => setSelectedCategory('all')}
             >
               Todos
             </button>
             {categories.map(cat => (
-              <button 
+              <button
                 key={cat.id}
                 className={`category-pill ${selectedCategory === cat.id ? 'active' : ''}`}
                 onClick={() => setSelectedCategory(cat.id)}
@@ -353,19 +293,19 @@ export default function Home() {
                   <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '14px', borderBottom: '1px solid var(--border)', paddingBottom: '6px' }}>
                     {category.name}
                   </h3>
-                  
+
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     {category.products.map(product => (
-                      <div 
+                      <div
                         key={product.id}
                         className="card flex gap-4"
                         style={{ cursor: 'pointer', padding: '12px', alignItems: 'center' }}
                         onClick={() => navigate(`/product/${product.id}`, { state: { product } })}
                       >
                         {product.image_url && (
-                          <img 
-                            src={product.image_url} 
-                            alt={product.name} 
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
                             style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }}
                           />
                         )}
@@ -382,9 +322,6 @@ export default function Home() {
                             <span className="font-bold" style={{ fontSize: '0.95rem', color: 'white' }}>
                               R$ {product.price.toFixed(2).replace('.', ',')}
                             </span>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
-                              Pedir <ChevronRight size={14} />
-                            </span>
                           </div>
                         </div>
                       </div>
@@ -397,35 +334,8 @@ export default function Home() {
 
       </div>
 
-      {/* FOOTER FIXO (OPÇÕES DE NAVEGAÇÃO DE SESSÃO) */}
-      {session && (
-        <div style={{
-          position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-          width: '100%', maxWidth: '600px', padding: '12px 20px',
-          background: 'rgba(24, 24, 28, 0.9)', backdropFilter: 'blur(16px)',
-          borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', gap: '12px', zIndex: 100
-        }}>
-          <button 
-            className="btn btn-outline" 
-            onClick={() => navigate('/orders')}
-            style={{ flex: 1, padding: '10px', fontSize: '0.9rem', display: 'flex', gap: '8px' }}
-          >
-            <CheckCircle2 size={18} color="var(--success)" />
-            Ver Pedidos
-          </button>
-          <button 
-            className="btn btn-primary" 
-            onClick={() => navigate('/cart')}
-            style={{ flex: 1, padding: '10px', fontSize: '0.9rem', display: 'flex', gap: '8px' }}
-          >
-            <ShoppingBag size={18} />
-            Minha Comanda ({cartItemsCount})
-          </button>
-        </div>
-      )}
-
-      {/* MODAL PARA DEFINIR A MESA */}
-      {showTableModal && (
+      {/* MODAL PARA CHAMAR GARÇOM */}
+      {showWaiterModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(10, 10, 12, 0.95)', zIndex: 1000,
@@ -434,41 +344,38 @@ export default function Home() {
         }}>
           <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '24px', background: 'var(--bg-card)' }}>
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <QrCode size={48} color="var(--primary)" style={{ marginBottom: '12px' }} />
-              <h3 style={{ color: 'white', marginBottom: '8px' }}>Iniciar Sessão na Mesa</h3>
+              <BellRing size={48} color="var(--primary)" style={{ margin: '0 auto 12px' }} />
+              <h3 style={{ color: 'white', marginBottom: '8px' }}>Chamar Garçom</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Digite o número da sua mesa para liberar o pedido e adicionar produtos ao carrinho.
+                Informe o número da sua mesa para que o garçom vá até você.
               </p>
             </div>
-            
-            <form onSubmit={handleSessionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+            <form onSubmit={handleCallWaiter} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  Número da Mesa
-                </label>
-                <input 
-                  type="number" 
-                  placeholder="Ex: 5" 
+                <input
+                  type="number"
+                  placeholder="Nº da Mesa (Ex: 5)"
                   value={tableNumber}
                   onChange={e => setTableNumber(e.target.value)}
                   style={{
-                    width: '100%', padding: '12px', borderRadius: '8px',
+                    width: '100%', padding: '14px', borderRadius: '8px',
                     border: '1px solid var(--border)', background: 'var(--bg-dark)',
-                    color: 'white', fontSize: '1rem', outline: 'none', textAlign: 'center'
+                    color: 'white', fontSize: '1.1rem', outline: 'none', textAlign: 'center'
                   }}
                   required
                 />
               </div>
 
-              <button type="submit" className="btn btn-primary" disabled={loadingSession}>
-                {loadingSession ? 'Iniciando...' : 'Acessar e Pedir'}
+              <button type="submit" className="btn btn-primary" disabled={callingWaiter} style={{ padding: '14px', fontSize: '1.1rem' }}>
+                {callingWaiter ? 'Chamando...' : 'Confirmar Chamado'}
               </button>
 
-              <button 
-                type="button" 
-                className="btn btn-outline" 
-                onClick={() => setShowTableModal(false)}
-                style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setShowWaiterModal(false)}
+                style={{ borderColor: 'var(--border)', color: 'var(--text-muted)', padding: '14px' }}
               >
                 Cancelar
               </button>

@@ -1,12 +1,9 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -14,7 +11,7 @@ model TableSession {
   id           String    @id @default(uuid())
   table_number Int
   qr_token     String    @unique
-  status       String    @default("active") // active, closed
+  status       String    @default("active")
   opened_at    DateTime  @default(now())
   closed_at    DateTime?
   orders       Order[]
@@ -28,38 +25,45 @@ model Category {
 }
 
 model Product {
-  id           String      @id @default(uuid())
-  category_id  String
-  category     Category    @relation(fields: [category_id], references: [id])
-  name         String
-  description  String?
-  price        Float
-  image_url    String?
-  is_available Boolean     @default(true)
-  is_featured  Boolean     @default(false)
-  order_items  OrderItem[]
+  id                String      @id @default(uuid())
+  category_id       String
+  name              String
+  description       String?
+  price             Float
+  image_url         String?
+  is_available      Boolean     @default(true)
+  is_featured       Boolean     @default(false)
+  ncm               String      @default("")
+  cfop              String      @default("")
+  regime_tributario String      @default("Substituição Tributária")
+  order_items       OrderItem[]
+  category          Category    @relation(fields: [category_id], references: [id])
 }
 
 model Order {
   id               String       @id @default(uuid())
   table_session_id String
-  table_session    TableSession @relation(fields: [table_session_id], references: [id])
-  status           String       @default("pending") // pending, preparing, ready, delivered, canceled
+  status           String       @default("pending")
   comanda_number   String?
+  waiter_name      String?
   total_amount     Float        @default(0)
   created_at       DateTime     @default(now())
+  payment_method   String?
+  nfce_emitted     Boolean      @default(false)
+  nfce_access_key  String?
+  table_session    TableSession @relation(fields: [table_session_id], references: [id])
   items            OrderItem[]
 }
 
 model OrderItem {
   id         String  @id @default(uuid())
   order_id   String
-  order      Order   @relation(fields: [order_id], references: [id])
   product_id String
-  product    Product @relation(fields: [product_id], references: [id])
   quantity   Int     @default(1)
   unit_price Float
   notes      String?
+  product    Product @relation(fields: [product_id], references: [id])
+  order      Order   @relation(fields: [order_id], references: [id])
 }
 
 model Banner {
@@ -68,4 +72,29 @@ model Banner {
   subtitle  String?
   image_url String
   badge     String?
+}
+
+model CashMovement {
+  id              String      @id
+  cash_session_id String
+  type            String
+  method          String?
+  amount          Float
+  description     String?
+  created_at      DateTime    @default(now())
+  CashSession     CashSession @relation(fields: [cash_session_id], references: [id])
+}
+
+model CashSession {
+  id              String         @id
+  status          String         @default("open")
+  opened_at       DateTime       @default(now())
+  closed_at       DateTime?
+  opening_value   Float          @default(0)
+  declared_cash   Float?
+  declared_cards  Float?
+  expected_cash   Float          @default(0)
+  difference_cash Float?
+  operator_name   String         @default("Operador")
+  CashMovement    CashMovement[]
 }
