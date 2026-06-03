@@ -5,6 +5,10 @@
       "destination": "https://projeto-restaurante-production-b3e1.up.railway.app/api/:match*"
     },
     {
+      "source": "/uploads/:match*",
+      "destination": "https://projeto-restaurante-production-b3e1.up.railway.app/uploads/:match*"
+    },
+    {
       "source": "/socket.io/:match*",
       "destination": "https://projeto-restaurante-production-b3e1.up.railway.app/socket.io/:match*"
     },
