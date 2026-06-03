@@ -81,7 +81,7 @@ const ProductForm = ({ initialData, categories, onSubmit, onCancel, loading, sub
         </div>
         <div>
           <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Ou cole a URL da Imagem</label>
-          <input type="url" name="image_url" placeholder="https://images.unsplash.com/... (ou deixe em branco)" value={formData.image_url || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
+          <input type="text" name="image_url" placeholder="https://images.unsplash.com/... (ou deixe em branco)" value={formData.image_url || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
         </div>
       </div>
 
@@ -643,7 +643,7 @@ export default function MenuManagement() {
                 <div>
                   <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Ou cole a URL da Imagem *</label>
                   <input
-                    type="url" placeholder="https://images.unsplash.com/..."
+                    type="text" placeholder="https://images.unsplash.com/..."
                     value={newBannerImageUrl} onChange={e => setNewBannerImageUrl(e.target.value)}
                     style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }}
                     required
