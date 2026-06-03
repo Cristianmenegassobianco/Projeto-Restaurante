@@ -4,12 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "npx prisma db push --accept-data-loss && node server.js",
     "dev": "node --watch server.js",
     "seed": "node prisma/seed.js",
     "setup-prisma": "node setup-prisma.js",
     "preinstall": "node setup-prisma.js",
-    "postinstall": "prisma generate && npx prisma db push --accept-data-loss",
+    "postinstall": "prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
