@@ -281,11 +281,3 @@ p { color: var(--text-muted); line-height: 1.5; }
     display: none !important;
   }
 }
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}

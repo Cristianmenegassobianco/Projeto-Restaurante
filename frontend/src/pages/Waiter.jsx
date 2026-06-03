@@ -627,7 +627,7 @@ export default function Waiter() {
           background: 'rgba(0, 0, 0, 0.7)', zIndex: 1000,
           display: 'flex', justifyContent: 'center'
         }}>
-          <div className="no-scrollbar" style={{
+          <div style={{
             width: '75%', background: 'var(--bg-dark)',
             display: 'flex', flexDirection: 'column', overflowY: 'auto',
             boxShadow: '0 0 40px rgba(0,0,0,0.5)'
