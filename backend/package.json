@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node setup-prisma.js && npx prisma generate && node server.js",
     "dev": "node --watch server.js",
     "seed": "node prisma/seed.js",
     "setup-prisma": "node setup-prisma.js",
