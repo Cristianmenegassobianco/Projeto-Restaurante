@@ -8,6 +8,13 @@ import { randomUUID } from 'crypto';
 import productsRoutes from './routes/products.js';
 import cashRoutes from './routes/cash.js';
 import reportsRoutes from './routes/reports.js';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
@@ -67,6 +74,32 @@ seedDefaults();
 
 app.use(cors());
 app.use(express.json());
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir);
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const upload = multer({ storage: storage });
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.post('/api/upload', upload.single('image'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+  }
+  // Se o frontend está acessando de outro domínio/porta, pode ser interessante retornar a URL completa, mas como o Vite faz proxy, `/uploads/...` funciona bem.
+  const imageUrl = `/uploads/${req.file.filename}`;
+  res.json({ imageUrl });
+});
 
 // Logger middleware
 app.use((req, res, next) => {

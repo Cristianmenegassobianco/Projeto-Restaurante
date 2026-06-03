@@ -7,6 +7,7 @@ const ProductForm = ({ initialData, categories, onSubmit, onCancel, loading, sub
   const [formData, setFormData] = useState(initialData || {
     name: '', category_id: '', price: '', description: '', image_url: ''
   });
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -19,6 +20,34 @@ const ProductForm = ({ initialData, categories, onSubmit, onCancel, loading, sub
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    const formDataObj = new FormData();
+    formDataObj.append('image', file);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataObj
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFormData(prev => ({ ...prev, image_url: data.imageUrl }));
+        toast.success('Imagem enviada com sucesso!');
+      } else {
+        toast.error(data.error || 'Erro ao enviar imagem.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro de conexão ao enviar imagem.');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -44,9 +73,16 @@ const ProductForm = ({ initialData, categories, onSubmit, onCancel, loading, sub
           <input type="number" name="price" step="0.01" placeholder="Ex: 29.90" value={formData.price || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} required />
         </div>
       </div>
-      <div>
-        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>URL da Imagem</label>
-        <input type="url" name="image_url" placeholder="https://images.unsplash.com/... (ou deixe em branco)" value={formData.image_url || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Enviar Arquivo de Imagem</label>
+          <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} style={{ width: '100%', padding: '7px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
+          {uploadingImage && <span style={{ fontSize: '0.8rem', color: 'var(--primary)', marginTop: '4px', display: 'block' }}>Enviando...</span>}
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Ou cole a URL da Imagem</label>
+          <input type="url" name="image_url" placeholder="https://images.unsplash.com/... (ou deixe em branco)" value={formData.image_url || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
+        </div>
       </div>
 
       <div>
@@ -76,6 +112,7 @@ export default function MenuManagement() {
   const [newBannerBadge, setNewBannerBadge] = useState('');
   const [bannerLoading, setBannerLoading] = useState(false);
   const [confirmDeleteBannerId, setConfirmDeleteBannerId] = useState(null);
+  const [bannerUploadingImage, setBannerUploadingImage] = useState(false);
 
   // Form Resets
   const [resetKey, setResetKey] = useState(0);
@@ -278,6 +315,34 @@ export default function MenuManagement() {
       }
     } catch (err) {
       console.error('Erro ao carregar banners:', err);
+    }
+  };
+
+  const handleBannerImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setBannerUploadingImage(true);
+    const formDataObj = new FormData();
+    formDataObj.append('image', file);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataObj
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNewBannerImageUrl(data.imageUrl);
+        toast.success('Imagem enviada com sucesso!');
+      } else {
+        toast.error(data.error || 'Erro ao enviar imagem.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro de conexão ao enviar imagem.');
+    } finally {
+      setBannerUploadingImage(false);
     }
   };
 
@@ -566,14 +631,24 @@ export default function MenuManagement() {
                   style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }}
                 />
               </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>URL da Imagem *</label>
-                <input
-                  type="url" placeholder="https://images.unsplash.com/..."
-                  value={newBannerImageUrl} onChange={e => setNewBannerImageUrl(e.target.value)}
-                  style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }}
-                  required
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Enviar Arquivo de Imagem *</label>
+                  <input
+                    type="file" accept="image/*" onChange={handleBannerImageUpload} disabled={bannerUploadingImage}
+                    style={{ width: '100%', padding: '6px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }}
+                  />
+                  {bannerUploadingImage && <span style={{ fontSize: '0.8rem', color: 'var(--primary)', marginTop: '4px', display: 'block' }}>Enviando...</span>}
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Ou cole a URL da Imagem *</label>
+                  <input
+                    type="url" placeholder="https://images.unsplash.com/..."
+                    value={newBannerImageUrl} onChange={e => setNewBannerImageUrl(e.target.value)}
+                    style={{ width: '100%', padding: '9px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }}
+                    required
+                  />
+                </div>
               </div>
               {newBannerImageUrl && (
                 <img src={newBannerImageUrl} alt="Preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border)' }} onError={e => e.target.style.display = 'none'} />
