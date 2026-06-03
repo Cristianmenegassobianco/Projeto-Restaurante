@@ -75,6 +75,18 @@ app.use((req, res, next) => {
 });
 
 // --- ROUTES ---
+
+// Admin: Sync DB tables manually
+import { exec } from 'child_process';
+app.get('/api/admin/sync-db', (req, res) => {
+  exec('npx prisma db push --accept-data-loss', (error, stdout, stderr) => {
+    if (error) {
+      return res.status(500).json({ error: error.message, stdout, stderr });
+    }
+    res.json({ message: 'DB Synced Successfully', stdout });
+  });
+});
+
 app.use('/api/products', productsRoutes(prisma));
 app.use('/api/cash-session', cashRoutes(prisma));
 app.use('/api/reports', reportsRoutes(prisma));
