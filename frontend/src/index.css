@@ -45,6 +45,12 @@ body {
   #root {
     width: 75%;
   }
+  .responsive-width {
+    width: 75% !important;
+  }
+}
+.responsive-width {
+  width: 100%;
 }
 
 /* Tipografia */

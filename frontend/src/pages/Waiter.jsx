@@ -598,9 +598,8 @@ export default function Waiter() {
 
       {/* Footer Fixo */}
       {activeTab === 'order' && cartItemsCount > 0 && (
-        <div style={{
+        <div className="responsive-width" style={{
           position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-          width: '75%',
           padding: '16px 20px',
           background: 'rgba(24, 24, 28, 0.95)', backdropFilter: 'blur(16px)',
           borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 100
@@ -627,8 +626,8 @@ export default function Waiter() {
           background: 'rgba(0, 0, 0, 0.7)', zIndex: 1000,
           display: 'flex', justifyContent: 'center'
         }}>
-          <div style={{
-            width: '75%', background: 'var(--bg-dark)',
+          <div className="responsive-width" style={{
+            background: 'var(--bg-dark)',
             display: 'flex', flexDirection: 'column', overflowY: 'auto',
             boxShadow: '0 0 40px rgba(0,0,0,0.5)'
           }}>
