@@ -5,7 +5,7 @@ export default function productsRoutes(prisma) {
 
   // Create new product
   router.post('/', async (req, res) => {
-    const { category_id, name, description, price, image_url, ncm, cfop, regime_tributario } = req.body;
+    const { category_id, name, description, price, image_url, ncm, cfop, regime_tributario, suggested_products_ids } = req.body;
     if (!category_id || !name || price === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -20,7 +20,10 @@ export default function productsRoutes(prisma) {
           is_available: true,
           ncm: ncm || "",
           cfop: cfop || "",
-          regime_tributario: regime_tributario || "Substituição Tributária"
+          regime_tributario: regime_tributario || "Substituição Tributária",
+          suggestedProducts: suggested_products_ids && suggested_products_ids.length > 0 ? {
+            connect: suggested_products_ids.map(id => ({ id }))
+          } : undefined
         }
       });
       res.json(product);
@@ -50,7 +53,7 @@ export default function productsRoutes(prisma) {
   // Update product details
   router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { category_id, name, description, price, image_url, ncm, cfop, regime_tributario } = req.body;
+    const { category_id, name, description, price, image_url, ncm, cfop, regime_tributario, suggested_products_ids } = req.body;
     
     if (!category_id || !name || price === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -67,7 +70,10 @@ export default function productsRoutes(prisma) {
           image_url,
           ncm: ncm || "",
           cfop: cfop || "",
-          regime_tributario: regime_tributario || "Substituição Tributária"
+          regime_tributario: regime_tributario || "Substituição Tributária",
+          suggestedProducts: suggested_products_ids ? {
+            set: suggested_products_ids.map(sid => ({ id: sid }))
+          } : undefined
         }
       });
       res.json(updated);

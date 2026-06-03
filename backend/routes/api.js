@@ -19,7 +19,8 @@ app.get('/api/menu', async (req, res) => {
     const categories = await prisma.category.findMany({
       include: {
         products: {
-          where: { is_available: true }
+          where: { is_available: true },
+          include: { suggestedProducts: true }
         }
       },
       orderBy: { sort_order: 'asc' }
@@ -252,7 +253,9 @@ app.get('/api/admin/menu', async (req, res) => {
   try {
     const categories = await prisma.category.findMany({
       include: {
-        products: true
+        products: {
+          include: { suggestedProducts: true }
+        }
       },
       orderBy: { sort_order: 'asc' }
     });

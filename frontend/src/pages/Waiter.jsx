@@ -22,6 +22,11 @@ export default function Waiter() {
   const [cart, setCart] = useState([]);
   const [showCartModal, setShowCartModal] = useState(false);
   const [sendingOrder, setSendingOrder] = useState(false);
+  const [platesCount, setPlatesCount] = useState(0);
+  const [wineGlassesCount, setWineGlassesCount] = useState(0);
+  const [glassesNormalCount, setGlassesNormalCount] = useState(0);
+  const [glassesIceCount, setGlassesIceCount] = useState(0);
+  const [glassesIceLemonCount, setGlassesIceLemonCount] = useState(0);
   
   const [activeTab, setActiveTab] = useState('order'); // 'order' or 'history'
   const [myOrders, setMyOrders] = useState(() => JSON.parse(localStorage.getItem('myOrders') || '[]'));
@@ -215,8 +220,8 @@ export default function Waiter() {
       alert('Por favor, informe seu nome (Garçom).');
       return;
     }
-    if (!tableNumber) {
-      alert('Por favor, informe o número da mesa.');
+    if (!comandaNumber) {
+      alert('Por favor, informe o número da comanda.');
       return;
     }
     if (cart.length === 0) {
@@ -230,13 +235,22 @@ export default function Waiter() {
       const sessionRes = await fetch('/api/session/init', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ table_number: parseInt(tableNumber) })
+        body: JSON.stringify({ table_number: tableNumber ? parseInt(tableNumber) : 0 })
       });
       const sessionData = await sessionRes.json();
 
       if (!sessionData.session_id) {
         throw new Error('Falha ao iniciar sessão da mesa');
       }
+
+      let utensils = [];
+      if (platesCount > 0) utensils.push(`${platesCount} Prato(s)`);
+      if (wineGlassesCount > 0) utensils.push(`${wineGlassesCount} Taça(s)`);
+      if (glassesNormalCount > 0) utensils.push(`${glassesNormalCount} Copo(s)`);
+      if (glassesIceCount > 0) utensils.push(`${glassesIceCount} Copo(s) c/ Gelo`);
+      if (glassesIceLemonCount > 0) utensils.push(`${glassesIceLemonCount} Copo(s) c/ Gelo e Limão`);
+      
+      const utensilsString = utensils.length > 0 ? ` — Utensílios: ${utensils.join(', ')}` : '';
 
       // 2. Send Order
       const orderRes = await fetch('/api/orders', {
@@ -265,10 +279,11 @@ export default function Waiter() {
         const newOrder = {
           id: orderData.id || Date.now(),
           time: new Date().toLocaleTimeString(),
-          table: tableNumber,
+          table: tableNumber || 'S/N',
           comanda: comandaNumber,
           total: cartTotal,
           itemsCount: cartItemsCount,
+          itemsList: cart.map(item => `${item.quantity}x ${item.product.name}`).join(', ') + utensilsString,
           status: orderData.status || 'pending'
         };
         const updatedOrders = [newOrder, ...myOrders].slice(0, 50);
@@ -279,6 +294,11 @@ export default function Waiter() {
         setCart([]);
         setTableNumber('');
         setComandaNumber('');
+        setPlatesCount(0);
+        setWineGlassesCount(0);
+        setGlassesNormalCount(0);
+        setGlassesIceCount(0);
+        setGlassesIceLemonCount(0);
         setShowCartModal(false);
       } else {
         const errorData = await orderRes.json().catch(() => ({}));
@@ -458,9 +478,11 @@ export default function Waiter() {
                           </button>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                        <span>{order.itemsCount} itens</span>
-                        <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>R$ {(order.total || 0).toFixed(2).replace('.', ',')}</span>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '8px', lineHeight: '1.4' }}>
+                        {order.itemsList || `${order.itemsCount} itens`}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.9rem' }}>
+                        <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '1rem' }}>R$ {(order.total || 0).toFixed(2).replace('.', ',')}</span>
                       </div>
                     </div>
                   );
@@ -476,7 +498,7 @@ export default function Waiter() {
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Nº da Mesa *</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Nº da Mesa (Opcional)</label>
               <input 
                 type="number" 
                 value={tableNumber} 
@@ -486,7 +508,7 @@ export default function Waiter() {
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Comanda (Opcional)</label>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Comanda *</label>
               <input 
                 type="text" 
                 value={comandaNumber} 
@@ -605,7 +627,7 @@ export default function Waiter() {
           background: 'rgba(0, 0, 0, 0.7)', zIndex: 1000,
           display: 'flex', justifyContent: 'center'
         }}>
-          <div style={{
+          <div className="no-scrollbar" style={{
             width: '75%', background: 'var(--bg-dark)',
             display: 'flex', flexDirection: 'column', overflowY: 'auto',
             boxShadow: '0 0 40px rgba(0,0,0,0.5)'
@@ -617,8 +639,58 @@ export default function Waiter() {
 
             <div style={{ padding: '20px', flex: 1 }}>
             <div style={{ marginBottom: '20px', padding: '12px', background: 'rgba(46, 213, 115, 0.1)', border: '1px solid var(--success)', borderRadius: '8px', color: 'var(--success)' }}>
-              <strong>Mesa:</strong> {tableNumber || 'Não informada'} <br/>
-              {comandaNumber && <><br/><strong>Comanda:</strong> {comandaNumber}</>}
+              <strong>Comanda:</strong> {comandaNumber} <br/>
+              <strong>Mesa:</strong> {tableNumber || 'Não informada'}
+            </div>
+
+            <h3 style={{ marginBottom: '16px', fontSize: '1rem' }}>Utensílios para a Mesa</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <span style={{ fontWeight: '500', color: 'white' }}>Pratos</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button type="button" onClick={() => setPlatesCount(Math.max(0, platesCount - 1))} style={{ background: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><MinusCircle size={16} style={{margin: 'auto'}}/></button>
+                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem', minWidth: '24px', textAlign: 'center' }}>{platesCount}</span>
+                  <button type="button" onClick={() => setPlatesCount(platesCount + 1)} style={{ background: 'var(--primary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><PlusCircle size={16} style={{margin: 'auto'}}/></button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <span style={{ fontWeight: '500', color: 'white' }}>Taças</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button type="button" onClick={() => setWineGlassesCount(Math.max(0, wineGlassesCount - 1))} style={{ background: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><MinusCircle size={16} style={{margin: 'auto'}}/></button>
+                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem', minWidth: '24px', textAlign: 'center' }}>{wineGlassesCount}</span>
+                  <button type="button" onClick={() => setWineGlassesCount(wineGlassesCount + 1)} style={{ background: 'var(--primary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><PlusCircle size={16} style={{margin: 'auto'}}/></button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <span style={{ fontWeight: '500', color: 'white' }}>Copos</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button type="button" onClick={() => setGlassesNormalCount(Math.max(0, glassesNormalCount - 1))} style={{ background: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><MinusCircle size={16} style={{margin: 'auto'}}/></button>
+                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem', minWidth: '24px', textAlign: 'center' }}>{glassesNormalCount}</span>
+                  <button type="button" onClick={() => setGlassesNormalCount(glassesNormalCount + 1)} style={{ background: 'var(--primary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><PlusCircle size={16} style={{margin: 'auto'}}/></button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <span style={{ fontWeight: '500', color: 'white' }}>Copos com Gelo</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button type="button" onClick={() => setGlassesIceCount(Math.max(0, glassesIceCount - 1))} style={{ background: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><MinusCircle size={16} style={{margin: 'auto'}}/></button>
+                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem', minWidth: '24px', textAlign: 'center' }}>{glassesIceCount}</span>
+                  <button type="button" onClick={() => setGlassesIceCount(glassesIceCount + 1)} style={{ background: 'var(--primary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><PlusCircle size={16} style={{margin: 'auto'}}/></button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <span style={{ fontWeight: '500', color: 'white' }}>Copos com Gelo e Limão</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button type="button" onClick={() => setGlassesIceLemonCount(Math.max(0, glassesIceLemonCount - 1))} style={{ background: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><MinusCircle size={16} style={{margin: 'auto'}}/></button>
+                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem', minWidth: '24px', textAlign: 'center' }}>{glassesIceLemonCount}</span>
+                  <button type="button" onClick={() => setGlassesIceLemonCount(glassesIceLemonCount + 1)} style={{ background: 'var(--primary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><PlusCircle size={16} style={{margin: 'auto'}}/></button>
+                </div>
+              </div>
+
             </div>
 
             <h3 style={{ marginBottom: '16px', fontSize: '1rem' }}>Itens Selecionados</h3>
@@ -667,7 +739,7 @@ export default function Waiter() {
               className="btn btn-primary" 
               style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '14px', fontSize: '1.1rem' }}
               onClick={handleSubmitOrder}
-              disabled={sendingOrder || !tableNumber || cart.length === 0}
+              disabled={sendingOrder || !comandaNumber || cart.length === 0}
             >
               <div style={{ display: sendingOrder ? 'none' : 'flex', alignItems: 'center', gap: '8px' }}>
                 <Send size={20} />

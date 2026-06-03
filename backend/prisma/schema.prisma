@@ -38,6 +38,8 @@ model Product {
   regime_tributario String      @default("Substituição Tributária")
   order_items       OrderItem[]
   category          Category    @relation(fields: [category_id], references: [id])
+  suggestedProducts Product[]   @relation("ProductSuggestions")
+  suggestedBy       Product[]   @relation("ProductSuggestions")
 }
 
 model Order {

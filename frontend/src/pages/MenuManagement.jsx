@@ -3,15 +3,18 @@ import { Toaster, toast } from 'react-hot-toast';
 import { io } from 'socket.io-client';
 import { Check, ChefHat, PlusCircle, Trash2, Image, Star, Edit, X } from 'lucide-react';
 
-const ProductForm = ({ initialData, categories, onSubmit, onCancel, loading, submitLabel = 'Salvar Produto' }) => {
+const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCancel, loading, submitLabel = 'Salvar Produto' }) => {
   const [formData, setFormData] = useState(initialData || {
-    name: '', category_id: '', price: '', description: '', image_url: ''
+    name: '', category_id: '', price: '', description: '', image_url: '', suggested_products_ids: []
   });
   const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData({
+        ...initialData,
+        suggested_products_ids: initialData.suggestedProducts ? initialData.suggestedProducts.map(p => p.id) : []
+      });
     } else if (!formData.category_id && categories && categories.length > 0) {
       setFormData(prev => ({ ...prev, category_id: categories[0].id }));
     }
@@ -89,6 +92,31 @@ const ProductForm = ({ initialData, categories, onSubmit, onCancel, loading, sub
         <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Descrição</label>
         <textarea name="description" placeholder="Descreva o produto, ingredientes, etc." value={formData.description || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none', minHeight: '80px' }} />
       </div>
+
+      <div>
+        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Sugestões de Acompanhamento (Opcional)</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '150px', overflowY: 'auto', background: 'var(--bg-dark)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          {allProducts.filter(p => p.id !== formData.id).map(p => (
+            <label key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'white', fontSize: '0.9rem' }}>
+              <input 
+                type="checkbox" 
+                checked={formData.suggested_products_ids?.includes(p.id)}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setFormData(prev => ({
+                    ...prev,
+                    suggested_products_ids: checked 
+                      ? [...(prev.suggested_products_ids || []), p.id]
+                      : (prev.suggested_products_ids || []).filter(id => id !== p.id)
+                  }));
+                }}
+              />
+              {p.name} (R$ {p.price.toFixed(2).replace('.', ',')})
+            </label>
+          ))}
+          {allProducts.length === 0 && <span style={{ color: 'var(--text-muted)' }}>Nenhum outro produto cadastrado.</span>}
+        </div>
+      </div>
       <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
         {onCancel && (
           <button type="button" className="btn btn-outline" onClick={onCancel} style={{ flex: 1, borderColor: 'var(--border)', color: 'var(--text-main)' }}>Cancelar</button>
@@ -125,6 +153,8 @@ export default function MenuManagement() {
   // Add Category Form State
   const [newCategoryName, setNewCategoryName] = useState('');
   const [categoryLoading, setCategoryLoading] = useState(false);
+
+  const allProducts = menu.flatMap(c => c.products);
 
 
 
@@ -225,7 +255,8 @@ export default function MenuManagement() {
           category_id: formData.category_id,
           price: parseFloat(formData.price),
           description: formData.description || '',
-          image_url: formData.image_url || ''
+          image_url: formData.image_url || '',
+          suggested_products_ids: formData.suggested_products_ids || []
         })
       });
 
@@ -258,7 +289,8 @@ export default function MenuManagement() {
           category_id: formData.category_id,
           price: parseFloat(formData.price),
           description: formData.description || '',
-          image_url: formData.image_url || ''
+          image_url: formData.image_url || '',
+          suggested_products_ids: formData.suggested_products_ids || []
         })
       });
 
@@ -588,6 +620,7 @@ export default function MenuManagement() {
             <ProductForm 
               key={resetKey}
               categories={categories} 
+              allProducts={allProducts}
               onSubmit={handleAddProduct} 
               loading={formLoading} 
             />
@@ -776,6 +809,7 @@ export default function MenuManagement() {
             <ProductForm 
               initialData={editingProduct} 
               categories={categories} 
+              allProducts={allProducts}
               onSubmit={handleUpdateProduct} 
               onCancel={() => setEditingProduct(null)}
               loading={editProductLoading} 
