@@ -5,7 +5,7 @@ export default function productsRoutes(prisma) {
 
   // Create new product
   router.post('/', async (req, res) => {
-    const { category_id, name, description, price, image_url, ncm, cfop, regime_tributario, suggested_products_ids } = req.body;
+    const { category_id, name, description, price, image_url, ncm, cfop, regime_tributario, suggested_products_ids, card_message } = req.body;
     if (!category_id || !name || price === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -21,6 +21,7 @@ export default function productsRoutes(prisma) {
           ncm: ncm || "",
           cfop: cfop || "",
           regime_tributario: regime_tributario || "Substituição Tributária",
+          card_message: card_message || "Toque para ver detalhes",
           suggestedProducts: suggested_products_ids && suggested_products_ids.length > 0 ? {
             connect: suggested_products_ids.map(id => ({ id }))
           } : undefined
@@ -53,7 +54,7 @@ export default function productsRoutes(prisma) {
   // Update product details
   router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { category_id, name, description, price, image_url, ncm, cfop, regime_tributario, suggested_products_ids } = req.body;
+    const { category_id, name, description, price, image_url, ncm, cfop, regime_tributario, suggested_products_ids, card_message } = req.body;
     
     if (!category_id || !name || price === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -71,6 +72,7 @@ export default function productsRoutes(prisma) {
           ncm: ncm || "",
           cfop: cfop || "",
           regime_tributario: regime_tributario || "Substituição Tributária",
+          card_message: card_message || "Toque para ver detalhes",
           suggestedProducts: suggested_products_ids ? {
             set: suggested_products_ids.map(sid => ({ id: sid }))
           } : undefined

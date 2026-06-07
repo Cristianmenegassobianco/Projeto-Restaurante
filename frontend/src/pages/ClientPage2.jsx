@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BellRing, Star, Flame, Menu, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-export default function Home() {
+export default function ClientPage2() {
   const navigate = useNavigate();
 
   // State
@@ -77,10 +77,10 @@ export default function Home() {
   };
 
   return (
-    <div style={{ backgroundColor: '#212322', color: '#D0BAAA', minHeight: '100vh', fontFamily: 'Georgia, serif', backgroundImage: 'radial-gradient(#511F26 1px, transparent 1px)', backgroundSize: '40px 40px', backgroundPosition: '0 0, 20px 20px', paddingBottom: '60px' }}>
+    <div style={{ backgroundColor: '#511F26', color: '#D0BAAA', minHeight: '100vh', fontFamily: 'Georgia, serif', backgroundImage: 'radial-gradient(#212322 1px, transparent 1px)', backgroundSize: '40px 40px', backgroundPosition: '0 0, 20px 20px', paddingBottom: '60px' }}>
       
       {/* HEADER RÚSTICO/SOFISTICADO */}
-      <header style={{ padding: '40px 20px', textAlign: 'center', borderBottom: '4px double #511F26', background: 'rgba(33, 35, 34, 0.95)', backdropFilter: 'blur(10px)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', position: 'relative', zIndex: 10 }}>
+      <header style={{ padding: '40px 20px', textAlign: 'center', borderBottom: '4px double #212322', background: 'rgba(33, 35, 34, 0.95)', backdropFilter: 'blur(10px)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', position: 'relative', zIndex: 10 }}>
         
         {/* BOTÃO DO MENU LATERAL */}
         <button 

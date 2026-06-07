@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { UtensilsCrossed, ShoppingBag, PlusCircle, MinusCircle, Trash2, Search, Send, BellRing, Check } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import Header from '../components/Header';
 import { playBeep } from '../utils/audio';
 
@@ -93,7 +94,7 @@ export default function Waiter() {
 
   const handleAttendCall = async (call) => {
     if (!waiterName) {
-      alert('Identifique-se primeiro na tela inicial (preencha seu nome) para poder atender!');
+      toast.error('Identifique-se primeiro na tela inicial (preencha seu nome) para poder atender!');
       return;
     }
     
@@ -135,12 +136,12 @@ export default function Waiter() {
           const updatedOrders = myOrders.filter(o => o.id !== orderId);
           setMyOrders(updatedOrders);
           localStorage.setItem('myOrders', JSON.stringify(updatedOrders));
-          alert('Pedido apagado da cozinha com sucesso!');
+          toast.success('Pedido apagado da cozinha com sucesso!');
         } else {
-          alert('Não foi possível cancelar na cozinha (Pode ser um pedido muito antigo).');
+          toast.error('Não foi possível cancelar na cozinha (Pode ser um pedido muito antigo).');
         }
       } catch (err) {
-        alert('Erro de conexão ao cancelar o pedido.');
+        toast.error('Erro de conexão ao cancelar o pedido.');
       }
     }
   };
@@ -153,10 +154,10 @@ export default function Waiter() {
         body: JSON.stringify({ status: 'delivered' })
       });
       if (!res.ok) {
-        alert('Não foi possível marcar como concluído.');
+        toast.error('Não foi possível marcar como concluído.');
       }
     } catch (err) {
-      alert('Erro de conexão.');
+      toast.error('Erro de conexão.');
     }
   };
 
@@ -217,15 +218,15 @@ export default function Waiter() {
 
   const handleSubmitOrder = async () => {
     if (!waiterName) {
-      alert('Por favor, informe seu nome (Garçom).');
+      toast.error('Por favor, informe seu nome (Garçom).');
       return;
     }
     if (!comandaNumber) {
-      alert('Por favor, informe o número da comanda.');
+      toast.error('Por favor, informe o número da comanda.');
       return;
     }
     if (cart.length === 0) {
-      alert('Adicione produtos ao pedido.');
+      toast.error('Adicione produtos ao pedido.');
       return;
     }
 
@@ -273,7 +274,7 @@ export default function Waiter() {
       const orderData = await orderRes.json();
 
       if (orderRes.ok) {
-        alert('Pedido enviado com sucesso para a cozinha!');
+        toast.success('Pedido enviado com sucesso para a cozinha!');
         
         // Save to local history
         const newOrder = {
@@ -306,14 +307,14 @@ export default function Waiter() {
       }
     } catch (error) {
       console.error(error);
-      alert('Erro ao enviar o pedido: ' + error.message);
+      toast.error('Erro ao enviar o pedido: ' + error.message);
     }
     setSendingOrder(false);
   };
 
   if (!isNameConfirmed) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', padding: '20px', background: 'var(--bg-dark)', justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', padding: '20px', background: '#212322', backgroundImage: 'none', justifyContent: 'center', alignItems: 'center' }}>
         <div className="card" style={{ padding: '32px', width: '100%', maxWidth: '400px', textAlign: 'center', background: 'var(--bg-card)' }}>
           <UtensilsCrossed size={48} color="var(--primary)" style={{ margin: '0 auto 16px' }} />
           <h2 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>Área do Garçom</h2>
@@ -343,7 +344,7 @@ export default function Waiter() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: '90px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', paddingBottom: '90px', background: '#212322', backgroundImage: 'none' }}>
       <header className="header" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <UtensilsCrossed size={22} color="var(--primary)" />
@@ -383,9 +384,23 @@ export default function Waiter() {
         <div style={{ padding: '20px 20px 0 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {waiterCalls.map(call => {
             const isAttended = call.status === 'attended';
-            const bgColor = isAttended ? 'rgba(46, 213, 115, 0.15)' : 'rgba(255, 193, 7, 0.1)';
-            const borderColor = isAttended ? 'var(--success)' : '#ffc107';
-            const textColor = isAttended ? 'var(--success)' : '#ffc107';
+            const isMe = call.attendedBy === waiterName;
+            
+            let bgColor = 'rgba(255, 193, 7, 0.1)';
+            let borderColor = '#ffc107';
+            let textColor = '#ffc107';
+            
+            if (isAttended) {
+              if (isMe) {
+                bgColor = 'rgba(46, 213, 115, 0.15)';
+                borderColor = 'var(--success)';
+                textColor = 'var(--success)';
+              } else {
+                bgColor = 'rgba(160, 82, 45, 0.15)'; // Sienna (Marrom)
+                borderColor = '#A0522D';
+                textColor = '#D2691E'; // Texto claro marrom
+              }
+            }
 
             return (
               <div key={call.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: bgColor, border: `1px solid ${borderColor}`, borderRadius: '8px', padding: '12px', transition: 'all 0.3s' }}>
@@ -482,7 +497,7 @@ export default function Waiter() {
                         {order.itemsList || `${order.itemsCount} itens`}
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.9rem' }}>
-                        <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '1rem' }}>R$ {(order.total || 0).toFixed(2).replace('.', ',')}</span>
+                        <span style={{ color: 'white', fontWeight: 'bold', fontSize: '1rem' }}>R$ {(order.total || 0).toFixed(2).replace('.', ',')}</span>
                       </div>
                     </div>
                   );
@@ -494,7 +509,7 @@ export default function Waiter() {
           <div>
             {/* Informações da Mesa/Comanda */}
             <div className="card" style={{ padding: '16px', marginBottom: '20px', background: 'var(--bg-card)' }}>
-              <h3 style={{ fontSize: '1rem', marginBottom: '12px', color: 'var(--primary)' }}>Dados do Pedido</h3>
+              <h3 style={{ fontSize: '1rem', marginBottom: '12px', color: 'var(--text-main)' }}>Dados do Pedido</h3>
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <div style={{ flex: 1 }}>
@@ -548,7 +563,7 @@ export default function Waiter() {
               .filter(cat => selectedCategory === 'all' || selectedCategory === cat.id)
               .map(category => (
                 <div key={category.id} style={{ marginBottom: '16px' }}>
-                  <h4 style={{ fontSize: '1rem', color: 'var(--primary)', marginBottom: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '4px' }}>
+                  <h4 style={{ fontSize: '1.1rem', color: 'var(--text-main)', marginBottom: '8px', borderBottom: '1px solid var(--border)', paddingBottom: '4px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                     {category.name}
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -560,7 +575,7 @@ export default function Waiter() {
                         <div key={product.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px' }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{product.name}</div>
-                            <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem', marginTop: '4px' }}>
+                            <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', marginTop: '4px' }}>
                               R$ {product.price.toFixed(2).replace('.', ',')}
                             </div>
                           </div>
@@ -601,12 +616,12 @@ export default function Waiter() {
         <div className="responsive-width" style={{
           position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
           padding: '16px 20px',
-          background: 'rgba(24, 24, 28, 0.95)', backdropFilter: 'blur(16px)',
+          background: '#212322', backdropFilter: 'blur(16px)',
           borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 100
         }}>
           <div>
             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Total ({cartItemsCount} itens)</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--primary)' }}>R$ {(cartTotal || 0).toFixed(2).replace('.', ',')}</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'white' }}>R$ {(cartTotal || 0).toFixed(2).replace('.', ',')}</div>
           </div>
           <button 
             className="btn btn-primary" 
@@ -627,7 +642,7 @@ export default function Waiter() {
           display: 'flex', justifyContent: 'center'
         }}>
           <div className="responsive-width" style={{
-            background: 'var(--bg-dark)',
+            background: '#212322',
             display: 'flex', flexDirection: 'column', overflowY: 'auto',
             boxShadow: '0 0 40px rgba(0,0,0,0.5)'
           }}>
@@ -637,7 +652,7 @@ export default function Waiter() {
             </div>
 
             <div style={{ padding: '20px', flex: 1 }}>
-            <div style={{ marginBottom: '20px', padding: '12px', background: 'rgba(46, 213, 115, 0.1)', border: '1px solid var(--success)', borderRadius: '8px', color: 'var(--success)' }}>
+              <div style={{ marginBottom: '20px', padding: '12px', background: 'rgba(46, 213, 115, 0.1)', border: '1px solid var(--success)', borderRadius: '8px', color: 'white' }}>
               <strong>Comanda:</strong> {comandaNumber} <br/>
               <strong>Mesa:</strong> {tableNumber || 'Não informada'}
             </div>
@@ -698,7 +713,7 @@ export default function Waiter() {
                 <div key={item.product.id} className="card" style={{ padding: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <div style={{ fontWeight: 'bold' }}>{item.quantity}x {item.product.name}</div>
-                    <div style={{ fontWeight: 'bold', color: 'var(--primary)' }}>R$ {((parseFloat(item.product?.price) || 0) * (parseInt(item.quantity, 10) || 0)).toFixed(2).replace('.', ',')}</div>
+                    <div style={{ fontWeight: 'bold', color: 'white' }}>R$ {((parseFloat(item.product?.price) || 0) * (parseInt(item.quantity, 10) || 0)).toFixed(2).replace('.', ',')}</div>
                   </div>
                   
                   <input 
@@ -732,7 +747,7 @@ export default function Waiter() {
           <div style={{ padding: '20px', background: 'var(--bg-card)', borderTop: '1px solid var(--border)', position: 'sticky', bottom: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '1.2rem', fontWeight: 'bold' }}>
               <span>Total:</span>
-              <span style={{ color: 'var(--primary)' }}>R$ {(cartTotal || 0).toFixed(2).replace('.', ',')}</span>
+              <span style={{ color: 'white' }}>R$ {(cartTotal || 0).toFixed(2).replace('.', ',')}</span>
             </div>
             <button 
               className="btn btn-primary" 

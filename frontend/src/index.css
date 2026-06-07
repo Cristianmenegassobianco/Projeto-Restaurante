@@ -1,25 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-dark: #0a0a0c;
-  --bg-card: #18181c;
-  --primary: #f28500; /* Laranja premium */
-  --primary-hover: #ff9d2b;
-  --text-main: #f5f5f7;
-  --text-muted: #a0a0a5;
-  --border: #2a2a2e;
+  --bg-dark: #3D312A; /* Marrom Escuro / Dark Brown */
+  --bg-card: #212322; /* Preto Chumbo / Black Charcoal */
+  --primary: #511F26; /* Vinho / Bordeaux */
+  --primary-hover: #7a2f3a; 
+  --text-main: #F2EEDF; /* Bege Claro / Light Beige */
+  --text-secondary: #D0BAAA; /* Areia / Nude */
+  --text-muted: #B5B4A2; /* Verde Sálvia / Sage Green */
+  --border: #511F26; /* Vinho para bordas */
+  --border-light: #C0AAB1; /* Lilás Suave para bordas de destaque */
   --danger: #ff4757;
-  --success: #2ed573;
-  --radius: 16px;
-  --radius-sm: 8px;
-  --shadow: 0 8px 30px rgba(0,0,0,0.4);
+  --success: #3F564C; /* Verde Floresta */
+  --radius: 0px; /* Bordas mais quadradas para o estilo rústico */
+  --radius-sm: 0px;
+  --shadow: 5px 5px 15px rgba(0,0,0,0.4);
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Georgia', serif; /* Fonte clássica/rústica por padrão */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -29,6 +31,9 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-image: radial-gradient(#511F26 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: 0 0, 20px 20px;
 }
 
 #root {
@@ -43,10 +48,10 @@ body {
 
 @media (min-width: 1025px) {
   #root {
-    width: 75%;
+    width: 100%;
   }
   .responsive-width {
-    width: 75% !important;
+    width: 100% !important;
   }
 }
 .responsive-width {
@@ -76,7 +81,7 @@ p { color: var(--text-muted); line-height: 1.5; }
 
 .btn-primary {
   background: var(--primary);
-  color: #fff;
+  color: #D0BAAA;
 }
 .btn-primary:hover { background: var(--primary-hover); }
 
@@ -98,23 +103,93 @@ p { color: var(--text-muted); line-height: 1.5; }
 .card {
   background: var(--bg-card);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 24px;
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
   transition: transform 0.2s;
+  position: relative;
+}
+
+/* Detalhes de cantoneiras nas bordas dos cards para o tema rústico */
+.card::before {
+  content: ''; position: absolute; top: 4px; left: 4px; width: 10px; height: 10px; border-top: 1px solid var(--border-light); border-left: 1px solid var(--border-light);
+}
+.card::after {
+  content: ''; position: absolute; top: 4px; right: 4px; width: 10px; height: 10px; border-top: 1px solid var(--border-light); border-right: 1px solid var(--border-light);
 }
 
 .header {
-  padding: 20px;
+  padding: 30px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  background: rgba(10, 10, 12, 0.8);
+  border-bottom: 4px double var(--border);
+  background: rgba(33, 35, 34, 0.95);
   backdrop-filter: blur(10px);
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Carrossel Horizontal de Produtos na Home */
+.product-grid {
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+  padding-bottom: 16px;
+  scrollbar-width: none; /* Firefox */
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+.product-grid::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+.rustic-card {
+  flex: 0 0 42vw; /* Cards maiores, mostrando pouco menos de 2.5 na tela e indicando carrossel */
+  min-width: 170px;
+  max-width: 220px;
+  scroll-snap-align: center;
+  padding: 16px !important;
+}
+.rustic-card img {
+  height: 140px !important;
+}
+.rustic-card h4 {
+  font-size: 1.1rem !important;
+}
+
+@media (min-width: 768px) {
+  .product-grid {
+    gap: 30px;
+    padding-bottom: 30px;
+  }
+  .rustic-card {
+    flex: 0 0 300px; /* No computador mostra cards maiores */
+    min-width: 300px;
+    max-width: 350px;
+    padding: 25px !important;
+  }
+  .rustic-card img {
+    height: 200px !important;
+  }
+  .rustic-card h4 {
+    font-size: 1.3rem !important;
+  }
+}
+
+/* Grid das Categorias */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .category-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  }
 }
 
 /* Glassmorphism utils */
@@ -256,7 +331,7 @@ p { color: var(--text-muted); line-height: 1.5; }
 
 .category-pill.active {
   background: var(--primary);
-  color: white;
+  color: #D0BAAA;
   border-color: var(--primary);
 }
 

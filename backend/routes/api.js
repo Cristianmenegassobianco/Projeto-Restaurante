@@ -265,22 +265,6 @@ app.get('/api/admin/menu', async (req, res) => {
   }
 });
 
-// 12. Client: Get orders for a session
-app.get('/api/sessions/:session_id/orders', async (req, res) => {
-  const { session_id } = req.params;
-  try {
-    const orders = await prisma.order.findMany({
-      where: { table_session_id: session_id },
-      include: {
-        items: { include: { product: true } }
-      },
-      orderBy: { created_at: 'desc' }
-    });
-    res.json(orders);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch session orders' });
-  }
-});
 
 // 13. Banners: Get list
 app.get('/api/banners', async (req, res) => {
@@ -316,6 +300,24 @@ app.delete('/api/banners/:id', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete banner' });
+  }
+});
+
+// 15.1 Banners: Update
+app.put('/api/banners/:id', async (req, res) => {
+  const { id } = req.params;
+  const { title, subtitle, image_url, badge } = req.body;
+  if (!image_url || !title) {
+    return res.status(400).json({ error: 'Title and image_url are required' });
+  }
+  try {
+    const banner = await prisma.banner.update({
+      where: { id },
+      data: { title, subtitle, image_url, badge }
+    });
+    res.json(banner);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update banner' });
   }
 });
 
@@ -466,6 +468,32 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Falha ao processar pagamento da comanda.' });
+  }
+});
+
+// 19.1 Emit NFC-e after payment
+app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
+  const { number } = req.params;
+  try {
+    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const randomPart = Math.floor(10000000000000 + Math.random() * 90000000000000).toString();
+    const nfce_access_key = `3526${datePart}00019955001000${randomPart}1`;
+
+    await prisma.order.updateMany({
+      where: {
+        comanda_number: number,
+        status: 'paid'
+      },
+      data: {
+        nfce_emitted: true,
+        nfce_access_key: nfce_access_key
+      }
+    });
+
+    res.json({ success: true, nfce_access_key });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Falha ao emitir NFC-e.' });
   }
 });
 
@@ -624,19 +652,6 @@ app.post('/api/cash-session/close', async (req, res) => {
   }
 });
 
-// Get cash session history
-app.get('/api/cash-session/history', async (req, res) => {
-  try {
-    const sessions = await prisma.cashSession.findMany({
-      where: { status: 'closed' },
-      orderBy: { closed_at: 'desc' }
-    });
-    res.json(sessions);
-  } catch (error) {
-    console.error('Error fetching cash history:', error);
-    res.status(500).json({ error: 'Failed to fetch cash history' });
-  }
-});
 
 // Get movements for current active session
 app.get('/api/cash-session/movements', async (req, res) => {

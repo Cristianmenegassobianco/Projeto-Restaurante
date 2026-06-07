@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, DollarSign, Calendar, RefreshCw, FileText, Download } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function Reports() {
   const [data, setData] = useState(null);
@@ -19,11 +20,11 @@ export default function Reports() {
         const json = await res.json();
         setData(json);
       } else {
-        alert('Erro ao buscar relatórios.');
+        toast.error('Erro ao buscar relatórios.');
       }
     } catch (err) {
       console.error(err);
-      alert('Erro de conexão ao buscar relatórios.');
+      toast.error('Erro de conexão ao buscar relatórios.');
     } finally {
       setLoading(false);
     }
@@ -45,29 +46,29 @@ export default function Reports() {
       {/* FILTROS E CABEÇALHO */}
       <div className="card no-print" style={{ padding: '20px', marginBottom: '24px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px', background: 'var(--bg-card)' }}>
         <div>
-          <h2 style={{ margin: 0, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h2 style={{ margin: 0, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FileText size={24} /> Relatório Gerencial
           </h2>
-          <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Filtre as informações do seu restaurante.</p>
+          <p style={{ margin: 0, color: 'white', fontSize: '0.9rem' }}>Filtre as informações do seu restaurante.</p>
         </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Data Inicial</label>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'white', marginBottom: '4px' }}>Data Inicial</label>
             <input 
               type="date" 
               value={startDate} 
               onChange={e => setStartDate(e.target.value)}
-              style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white' }}
+              style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: '#212322', fontWeight: 'bold' }}
             />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Data Final</label>
+            <label style={{ display: 'block', fontSize: '0.8rem', color: 'white', marginBottom: '4px' }}>Data Final</label>
             <input 
               type="date" 
               value={endDate} 
               onChange={e => setEndDate(e.target.value)}
-              style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white' }}
+              style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: '#212322', fontWeight: 'bold' }}
             />
           </div>
           <button 
@@ -106,16 +107,16 @@ export default function Reports() {
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', marginBottom: '32px' }}>
             <div className="card" style={{ padding: '20px', background: 'rgba(33, 150, 243, 0.1)', border: '1px solid rgba(33, 150, 243, 0.3)', borderLeft: '4px solid #2196f3' }}>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Aberturas do Dia (Hoje)</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2196f3' }}>{formatCurrency(data.cashOpenings?.today || 0)}</div>
+              <div style={{ fontSize: '0.85rem', color: 'white' }}>Aberturas do Dia (Hoje)</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{formatCurrency(data.cashOpenings?.today || 0)}</div>
             </div>
             <div className="card" style={{ padding: '20px', background: 'rgba(156, 39, 176, 0.1)', border: '1px solid rgba(156, 39, 176, 0.3)', borderLeft: '4px solid #9c27b0' }}>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Aberturas da Semana</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#9c27b0' }}>{formatCurrency(data.cashOpenings?.week || 0)}</div>
+              <div style={{ fontSize: '0.85rem', color: 'white' }}>Aberturas da Semana</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{formatCurrency(data.cashOpenings?.week || 0)}</div>
             </div>
             <div className="card" style={{ padding: '20px', background: 'rgba(255, 152, 0, 0.1)', border: '1px solid rgba(255, 152, 0, 0.3)', borderLeft: '4px solid #ff9800' }}>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Aberturas do Mês</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ff9800' }}>{formatCurrency(data.cashOpenings?.month || 0)}</div>
+              <div style={{ fontSize: '0.85rem', color: 'white' }}>Aberturas do Mês</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>{formatCurrency(data.cashOpenings?.month || 0)}</div>
             </div>
           </div>
 
@@ -126,23 +127,23 @@ export default function Reports() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginBottom: '32px' }}>
             
             <div className="card" style={{ padding: '24px', background: 'var(--bg-card)', borderLeft: '4px solid var(--success)' }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Total de Vendas Feitas (Recebido)</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--success)', margin: '8px 0' }}>
+              <div style={{ fontSize: '0.9rem', color: 'white' }}>Total de Vendas Feitas (Recebido)</div>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white', margin: '8px 0' }}>
                 {formatCurrency(data.sales.total)}
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Referente a {data.sales.list.length} pedido(s) pagos.</div>
+              <div style={{ fontSize: '0.8rem', color: 'white' }}>Referente a {data.sales.list.length} pedido(s) pagos.</div>
             </div>
 
             <div className="card" style={{ padding: '24px', background: 'var(--bg-card)', borderLeft: '4px solid var(--primary)' }}>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Valores em Caixa (Movimentações)</div>
+              <div style={{ fontSize: '0.9rem', color: 'white' }}>Valores em Caixa (Movimentações)</div>
               <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                   <span>Entradas (Vendas + Suprimentos):</span>
-                  <span style={{ color: 'var(--success)', fontWeight: 'bold' }}>{formatCurrency(data.movements.totalIn)}</span>
+                  <span style={{ color: 'white', fontWeight: 'bold' }}>{formatCurrency(data.movements.totalIn)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                   <span>Saídas (Sangrias):</span>
-                  <span style={{ color: 'var(--danger)', fontWeight: 'bold' }}>{formatCurrency(data.movements.totalOut)}</span>
+                  <span style={{ color: 'white', fontWeight: 'bold' }}>{formatCurrency(data.movements.totalOut)}</span>
                 </div>
                 <hr style={{ borderColor: 'var(--border)', margin: '4px 0' }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 'bold' }}>
@@ -160,17 +161,17 @@ export default function Reports() {
             </h3>
             
             {data.sales.list.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>Nenhuma venda registrada neste período.</p>
+              <p style={{ color: 'white', textAlign: 'center', padding: '20px 0' }}>Nenhuma venda registrada neste período.</p>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                   <thead>
                     <tr style={{ borderBottom: '2px solid var(--border)', textAlign: 'left' }}>
-                      <th style={{ padding: '12px 8px', color: 'var(--text-muted)' }}>Data / Hora</th>
-                      <th style={{ padding: '12px 8px', color: 'var(--text-muted)' }}>Comanda</th>
-                      <th style={{ padding: '12px 8px', color: 'var(--text-muted)' }}>Método</th>
-                      <th style={{ padding: '12px 8px', color: 'var(--text-muted)' }}>Status</th>
-                      <th style={{ padding: '12px 8px', color: 'var(--text-muted)', textAlign: 'right' }}>Valor Total</th>
+                      <th style={{ padding: '12px 8px', color: 'white' }}>Data / Hora</th>
+                      <th style={{ padding: '12px 8px', color: 'white' }}>Comanda</th>
+                      <th style={{ padding: '12px 8px', color: 'white' }}>Método</th>
+                      <th style={{ padding: '12px 8px', color: 'white' }}>Status</th>
+                      <th style={{ padding: '12px 8px', color: 'white', textAlign: 'right' }}>Valor Total</th>
                     </tr>
                   </thead>
                   <tbody>

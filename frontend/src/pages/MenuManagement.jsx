@@ -5,7 +5,7 @@ import { Check, ChefHat, PlusCircle, Trash2, Image, Star, Edit, X } from 'lucide
 
 const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCancel, loading, submitLabel = 'Salvar Produto' }) => {
   const [formData, setFormData] = useState(initialData || {
-    name: '', category_id: '', price: '', description: '', image_url: '', suggested_products_ids: []
+    name: '', category_id: '', price: '', description: '', image_url: '', card_message: 'Toque para ver detalhes', suggested_products_ids: []
   });
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -80,12 +80,16 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
         <div>
           <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Enviar Arquivo de Imagem</label>
           <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} style={{ width: '100%', padding: '7px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
-          {uploadingImage && <span style={{ fontSize: '0.8rem', color: 'var(--primary)', marginTop: '4px', display: 'block' }}>Enviando...</span>}
+          {uploadingImage && <span style={{ fontSize: '0.8rem', color: 'white', marginTop: '4px', display: 'block' }}>Enviando...</span>}
         </div>
         <div>
           <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Ou cole a URL da Imagem</label>
           <input type="text" name="image_url" placeholder="https://images.unsplash.com/... (ou deixe em branco)" value={formData.image_url || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
         </div>
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Mensagem no Card (Página Inicial)</label>
+        <input type="text" name="card_message" placeholder="Ex: Toque para ver detalhes" value={formData.card_message || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
       </div>
 
       <div>
@@ -114,7 +118,7 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
               {p.name} (R$ {p.price.toFixed(2).replace('.', ',')})
             </label>
           ))}
-          {allProducts.length === 0 && <span style={{ color: 'var(--text-muted)' }}>Nenhum outro produto cadastrado.</span>}
+          {allProducts.length === 0 && <span style={{ color: 'white' }}>Nenhum outro produto cadastrado.</span>}
         </div>
       </div>
       <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
@@ -141,6 +145,7 @@ export default function MenuManagement() {
   const [bannerLoading, setBannerLoading] = useState(false);
   const [confirmDeleteBannerId, setConfirmDeleteBannerId] = useState(null);
   const [bannerUploadingImage, setBannerUploadingImage] = useState(false);
+  const [editingBanner, setEditingBanner] = useState(null);
 
   // Form Resets
   const [resetKey, setResetKey] = useState(0);
@@ -256,6 +261,7 @@ export default function MenuManagement() {
           price: parseFloat(formData.price),
           description: formData.description || '',
           image_url: formData.image_url || '',
+          card_message: formData.card_message || 'Toque para ver detalhes',
           suggested_products_ids: formData.suggested_products_ids || []
         })
       });
@@ -290,6 +296,7 @@ export default function MenuManagement() {
           price: parseFloat(formData.price),
           description: formData.description || '',
           image_url: formData.image_url || '',
+          card_message: formData.card_message || 'Toque para ver detalhes',
           suggested_products_ids: formData.suggested_products_ids || []
         })
       });
@@ -334,6 +341,23 @@ export default function MenuManagement() {
     } finally {
       setCategoryLoading(false);
     }
+  };
+
+  
+  const handleEditBannerClick = (banner) => {
+    setEditingBanner(banner);
+    setNewBannerTitle(banner.title);
+    setNewBannerSubtitle(banner.subtitle || '');
+    setNewBannerImageUrl(banner.image_url);
+    setNewBannerBadge(banner.badge || '');
+  };
+
+  const handleCancelEditBanner = () => {
+    setEditingBanner(null);
+    setNewBannerTitle('');
+    setNewBannerSubtitle('');
+    setNewBannerImageUrl('');
+    setNewBannerBadge('');
   };
 
   const fetchBanners = async () => {
@@ -385,30 +409,56 @@ export default function MenuManagement() {
       return;
     }
     setBannerLoading(true);
-    try {
-      const res = await fetch('/api/banners', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: newBannerTitle,
-          subtitle: newBannerSubtitle,
-          image_url: newBannerImageUrl,
-          badge: newBannerBadge
-        })
-      });
-      if (res.ok) {
-        toast.success('Banner adicionado com sucesso!');
-        setNewBannerTitle('');
-        setNewBannerSubtitle('');
-        setNewBannerImageUrl('');
-        setNewBannerBadge('');
-        fetchBanners();
-      } else {
-        toast.error('Erro ao adicionar banner.');
+    
+    if (editingBanner) {
+      try {
+        const res = await fetch(`/api/banners/${editingBanner.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newBannerTitle,
+            subtitle: newBannerSubtitle,
+            image_url: newBannerImageUrl,
+            badge: newBannerBadge
+          })
+        });
+        if (res.ok) {
+          toast.success('Banner atualizado com sucesso!');
+          handleCancelEditBanner();
+          fetchBanners();
+        } else {
+          toast.error('Erro ao atualizar banner.');
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error('Erro de conexão.');
       }
-    } catch (err) {
-      console.error(err);
-      toast.error('Erro de conexão.');
+    } else {
+      try {
+        const res = await fetch('/api/banners', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newBannerTitle,
+            subtitle: newBannerSubtitle,
+            image_url: newBannerImageUrl,
+            badge: newBannerBadge
+          })
+        });
+        if (res.ok) {
+          toast.success('Banner adicionado com sucesso!');
+          setNewBannerTitle('');
+          setNewBannerSubtitle('');
+          setNewBannerImageUrl('');
+          setNewBannerBadge('');
+          fetchBanners();
+        } else {
+          toast.error('Erro ao adicionar banner.');
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error('Erro de conexão.');
+      }
     }
     setBannerLoading(false);
   };
@@ -439,7 +489,7 @@ export default function MenuManagement() {
   };
 
   return (
-    <div style={{ padding: '20px', minHeight: '100vh', background: 'var(--bg-dark)' }}>
+    <div style={{ padding: '20px', minHeight: '100vh', background: '#212322', backgroundImage: 'none' }}>
       <Toaster position="top-right" />
       {/* HEADER */}
       <header className="flex justify-between items-center mb-4 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
@@ -482,7 +532,7 @@ export default function MenuManagement() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {menu.map(category => (
             <div key={category.id} className="card" style={{ padding: '20px' }}>
-              <h2 style={{ color: 'var(--primary)', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ color: 'var(--text-main)', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>{category.name}</span>
                 <button
                   onClick={() => deleteCategory(category.id)}
@@ -508,7 +558,7 @@ export default function MenuManagement() {
               </h2>
               
               {category.products.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum produto nesta categoria.</p>
+                <p style={{ color: 'white', fontStyle: 'italic' }}>Nenhum produto nesta categoria.</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {category.products.map(product => (
@@ -531,7 +581,7 @@ export default function MenuManagement() {
                         )}
                         <div>
                           <div className="font-bold">{product.name}</div>
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                          <div style={{ fontSize: '0.85rem', color: 'white' }}>
                             R$ {product.price.toFixed(2).replace('.', ',')}
                           </div>
                         </div>
@@ -543,7 +593,7 @@ export default function MenuManagement() {
                           style={{
                             padding: '6px 12px', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '0.85rem',
                             background: product.is_available ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
-                            color: product.is_available ? 'var(--success)' : 'var(--danger)',
+                            color: 'white',
                             border: `1px solid ${product.is_available ? 'var(--success)' : 'var(--danger)'}`
                           }}
                         >
@@ -587,7 +637,7 @@ export default function MenuManagement() {
           
           {/* Formulário de Categoria */}
           <div className="card" style={{ padding: '24px' }}>
-            <h2 className="mb-4" style={{ color: 'var(--primary)' }}>Criar Nova Categoria</h2>
+            <h2 className="mb-4" style={{ color: 'var(--text-main)' }}>Criar Nova Categoria</h2>
             <form onSubmit={handleAddCategory} style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
               <div style={{ flex: 1 }}>
                 <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Nome da Categoria *</label>
@@ -616,7 +666,7 @@ export default function MenuManagement() {
 
           {/* Formulário de Produto */}
           <div className="card" style={{ padding: '24px' }}>
-            <h2 className="mb-4" style={{ color: 'var(--primary)' }}>Adicionar Novo Produto</h2>
+            <h2 className="mb-4" style={{ color: 'var(--text-main)' }}>Adicionar Novo Produto</h2>
             <ProductForm 
               key={resetKey}
               categories={categories} 
@@ -633,13 +683,13 @@ export default function MenuManagement() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
           {/* Formulário de novo banner */}
           <div className="card" style={{ padding: '20px' }}>
-            <h2 style={{ color: 'var(--primary)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Image size={20} /> Adicionar Banner
+            <h2 style={{ color: 'var(--text-main)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Image size={20} /> {editingBanner ? 'Editar Banner' : 'Adicionar Banner'}
             </h2>
             <form onSubmit={handleAddBanner} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Título *</label>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'white' }}>Título *</label>
                   <input
                     type="text" placeholder="Ex: Combo do Dia"
                     value={newBannerTitle} onChange={e => setNewBannerTitle(e.target.value)}
@@ -648,7 +698,7 @@ export default function MenuManagement() {
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Badge (ex: 🔥 Destaque)</label>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'white' }}>Badge (ex: 🔥 Destaque)</label>
                   <input
                     type="text" placeholder="Ex: O Mais Pedido 🔥"
                     value={newBannerBadge} onChange={e => setNewBannerBadge(e.target.value)}
@@ -657,7 +707,7 @@ export default function MenuManagement() {
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Subtítulo</label>
+                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'white' }}>Subtítulo</label>
                 <input
                   type="text" placeholder="Ex: Hambúrguer + Fritas por R$ 45,90"
                   value={newBannerSubtitle} onChange={e => setNewBannerSubtitle(e.target.value)}
@@ -666,15 +716,15 @@ export default function MenuManagement() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Enviar Arquivo de Imagem *</label>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'white' }}>Enviar Arquivo de Imagem *</label>
                   <input
                     type="file" accept="image/*" onChange={handleBannerImageUpload} disabled={bannerUploadingImage}
                     style={{ width: '100%', padding: '6px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }}
                   />
-                  {bannerUploadingImage && <span style={{ fontSize: '0.8rem', color: 'var(--primary)', marginTop: '4px', display: 'block' }}>Enviando...</span>}
+                  {bannerUploadingImage && <span style={{ fontSize: '0.8rem', color: 'white', marginTop: '4px', display: 'block' }}>Enviando...</span>}
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Ou cole a URL da Imagem *</label>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', color: 'white' }}>Ou cole a URL da Imagem *</label>
                   <input
                     type="text" placeholder="https://images.unsplash.com/..."
                     value={newBannerImageUrl} onChange={e => setNewBannerImageUrl(e.target.value)}
@@ -686,17 +736,24 @@ export default function MenuManagement() {
               {newBannerImageUrl && (
                 <img src={newBannerImageUrl} alt="Preview" style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border)' }} onError={e => e.target.style.display = 'none'} />
               )}
-              <button type="submit" className="btn btn-primary" disabled={bannerLoading}>
-                {bannerLoading ? 'Salvando...' : 'Adicionar Banner'}
-              </button>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" className="btn btn-primary" disabled={bannerLoading} style={{ flex: 1 }}>
+                  {bannerLoading ? 'Salvando...' : (editingBanner ? 'Atualizar Banner' : 'Adicionar Banner')}
+                </button>
+                {editingBanner && (
+                  <button type="button" className="btn btn-outline" onClick={handleCancelEditBanner} style={{ flex: 1, borderColor: 'var(--border)', color: 'white' }}>
+                    Cancelar Edição
+                  </button>
+                )}
+              </div>
             </form>
           </div>
 
           {/* Lista de banners existentes */}
           <div className="card" style={{ padding: '20px' }}>
-            <h3 style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>Banners Ativos ({banners.length})</h3>
+            <h3 style={{ marginBottom: '16px', color: 'white' }}>Banners Ativos ({banners.length})</h3>
             {banners.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum banner cadastrado ainda.</p>
+              <p style={{ color: 'white', fontStyle: 'italic' }}>Nenhum banner cadastrado ainda.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {banners.map(banner => (
@@ -704,8 +761,8 @@ export default function MenuManagement() {
                     <img src={banner.image_url} alt={banner.title} style={{ width: '80px', height: '50px', objectFit: 'cover', borderRadius: '6px', flexShrink: 0 }} />
                     <div style={{ flex: 1, overflow: 'hidden', minWidth: '120px' }}>
                       <div style={{ fontWeight: 'bold', color: 'white', fontSize: '0.95rem' }}>{banner.title}</div>
-                      {banner.badge && <div style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>{banner.badge}</div>}
-                      {banner.subtitle && <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px', lineHeight: '1.4' }}>{banner.subtitle}</div>}
+                      {banner.badge && <div style={{ fontSize: '0.75rem', color: 'white' }}>{banner.badge}</div>}
+                      {banner.subtitle && <div style={{ fontSize: '0.85rem', color: 'white', marginTop: '4px', lineHeight: '1.4' }}>{banner.subtitle}</div>}
                     </div>
 
                     {/* Inline confirmation */}
@@ -719,19 +776,28 @@ export default function MenuManagement() {
                         </button>
                         <button
                           onClick={() => setConfirmDeleteBannerId(null)}
-                          style={{ padding: '6px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.82rem' }}
+                          style={{ padding: '6px 12px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '6px', color: 'white', cursor: 'pointer', fontSize: '0.82rem' }}
                         >
                           Cancelar
                         </button>
                       </div>
                     ) : (
-                      <button
-                        onClick={() => setConfirmDeleteBannerId(banner.id)}
-                        style={{ padding: '8px', background: 'rgba(244,67,54,0.1)', border: '1px solid var(--danger)', borderRadius: '6px', color: 'var(--danger)', cursor: 'pointer', flexShrink: 0 }}
-                        title="Remover banner"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleEditBannerClick(banner)}
+                          style={{ padding: '8px', background: 'rgba(255,255,255,0.1)', border: '1px solid var(--border)', borderRadius: '6px', color: 'white', cursor: 'pointer', flexShrink: 0, marginRight: '8px' }}
+                          title="Editar banner"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteBannerId(banner.id)}
+                          style={{ padding: '8px', background: 'rgba(244,67,54,0.1)', border: '1px solid var(--danger)', borderRadius: '6px', color: 'var(--danger)', cursor: 'pointer', flexShrink: 0 }}
+                          title="Remover banner"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </>
                     )}
                   </div>
                 ))}
@@ -744,16 +810,16 @@ export default function MenuManagement() {
       {/* CONTEÚDO 5: PRODUTOS EM DESTAQUE */}
       {activeTab === 'featured' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+          <p style={{ color: 'white', fontSize: '0.9rem' }}>
             Ative ou desative os produtos que aparecem na seção <strong style={{ color: 'white' }}>Destaques da Semana</strong> na página inicial do cliente.
           </p>
           {menu.map(category => (
             <div key={category.id} className="card" style={{ padding: '20px' }}>
-              <h2 style={{ color: 'var(--primary)', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+              <h2 style={{ color: 'var(--text-main)', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
                 {category.name}
               </h2>
               {category.products.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum produto nesta categoria.</p>
+                <p style={{ color: 'white', fontStyle: 'italic' }}>Nenhum produto nesta categoria.</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {category.products.map(product => (
@@ -764,7 +830,7 @@ export default function MenuManagement() {
                         )}
                         <div>
                           <div style={{ fontWeight: 'bold', color: 'white' }}>{product.name}</div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>R$ {product.price.toFixed(2).replace('.', ',')}</div>
+                          <div style={{ fontSize: '0.8rem', color: 'white' }}>R$ {product.price.toFixed(2).replace('.', ',')}</div>
                         </div>
                       </div>
                       <button
@@ -800,11 +866,11 @@ export default function MenuManagement() {
           <div className="card" style={{ width: '100%', maxWidth: '500px', padding: '24px', position: 'relative', background: 'var(--bg-card)', maxHeight: '90vh', overflowY: 'auto' }}>
             <button 
               onClick={() => setEditingProduct(null)}
-              style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
             >
               <X size={24} />
             </button>
-            <h2 className="mb-4" style={{ color: 'var(--primary)' }}>Editar Produto</h2>
+            <h2 className="mb-4" style={{ color: 'var(--text-main)' }}>Editar Produto</h2>
             
             <ProductForm 
               initialData={editingProduct} 

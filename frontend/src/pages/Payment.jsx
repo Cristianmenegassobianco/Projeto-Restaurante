@@ -48,7 +48,6 @@ export default function Payment() {
 
   // Payment Options
   const [paymentMethod, setPaymentMethod] = useState('dinheiro'); // 'dinheiro' | 'pix' | 'cartao'
-  const [createNfce, setCreateNfce] = useState(true);
   const [receivedCash, setReceivedCash] = useState('');
 
   // Simulators
@@ -100,6 +99,7 @@ export default function Payment() {
       case 'pending': return <Clock size={16} color="#a0a0a5" />;
       case 'preparing': return <ChefHat size={16} color="var(--primary)" />;
       case 'ready': return <CheckCircle2 size={16} color="var(--success)" />;
+      case 'delivered': return <CheckCircle2 size={16} color="var(--success)" />;
       case 'paid': return <CheckCircle2 size={16} color="var(--success)" />;
       default: return <Clock size={16} color="#a0a0a5" />;
     }
@@ -110,6 +110,7 @@ export default function Payment() {
       case 'pending': return 'Aguardando';
       case 'preparing': return 'Preparando';
       case 'ready': return 'Pronto';
+      case 'delivered': return 'Entregue';
       case 'paid': return 'Pago';
       default: return status;
     }
@@ -120,6 +121,7 @@ export default function Payment() {
       case 'pending': return '#a0a0a5';
       case 'preparing': return 'var(--primary)';
       case 'ready': return 'var(--success)';
+      case 'delivered': return 'var(--success)';
       case 'paid': return 'var(--success)';
       default: return '#a0a0a5';
     }
@@ -303,7 +305,7 @@ export default function Payment() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           payment_method: method,
-          create_nfce: createNfce
+          create_nfce: false
         })
       });
 
@@ -382,6 +384,30 @@ export default function Payment() {
     }
   };
 
+  const handleEmitNfce = async () => {
+    if (!lastPaymentInfo || lastPaymentInfo.nfce_emitted) return;
+    
+    try {
+      const res = await fetch(`/api/comandas/${lastPaymentInfo.comandaNumber}/emit-nfce`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLastPaymentInfo(prev => ({
+          ...prev,
+          nfce_emitted: true,
+          nfce_access_key: data.nfce_access_key
+        }));
+        setShowFiscalReceipt(true);
+      } else {
+        alert('Erro ao emitir NFC-e.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de conexão ao emitir NFC-e.');
+    }
+  };
+
   // Calcula o total geral de todas as ordens ativas da comanda
   const totalAmount = orders.reduce((acc, order) => acc + order.total_amount, 0);
 
@@ -411,7 +437,7 @@ export default function Payment() {
   }
 
   return (
-    <div style={{ padding: '20px', minHeight: '100vh', background: 'var(--bg-dark)', color: 'white', maxWidth: '800px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ padding: '20px', minHeight: '100vh', background: '#212322', backgroundImage: 'none', color: 'white', maxWidth: '800px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' }}>
       
       {/* HEADER */}
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', marginBottom: '0', paddingBottom: '16px', borderBottom: '1px solid var(--border)' }}>
@@ -430,11 +456,11 @@ export default function Payment() {
         </div>
         
         {activeSession ? (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(76, 175, 80, 0.15)', color: 'var(--success)', padding: '6px 12px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(76, 175, 80, 0.15)', color: 'white', padding: '6px 12px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 'bold' }}>
             <Unlock size={14} /><span>Caixa Aberto</span>
           </span>
         ) : (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(244, 67, 54, 0.15)', color: 'var(--danger)', padding: '6px 12px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 'bold' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(244, 67, 54, 0.15)', color: 'white', padding: '6px 12px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 'bold' }}>
             <Lock size={14} /><span>Caixa Fechado</span>
           </span>
         )}
@@ -447,8 +473,8 @@ export default function Payment() {
           style={{
             flex: 1, padding: '14px 16px', background: 'transparent', border: 'none',
             cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
-            color: activeTab === 'pdv' ? 'var(--primary)' : 'var(--text-muted)',
-            borderBottom: activeTab === 'pdv' ? '2px solid var(--primary)' : '2px solid transparent',
+            color: activeTab === 'pdv' ? 'white' : 'var(--text-muted)',
+            borderBottom: activeTab === 'pdv' ? '2px solid white' : '2px solid transparent',
             transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
           }}
         >
@@ -459,8 +485,8 @@ export default function Payment() {
           style={{
             flex: 1, padding: '14px 16px', background: 'transparent', border: 'none',
             cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
-            color: activeTab === 'consulta' ? 'var(--primary)' : 'var(--text-muted)',
-            borderBottom: activeTab === 'consulta' ? '2px solid var(--primary)' : '2px solid transparent',
+            color: activeTab === 'consulta' ? 'white' : 'var(--text-muted)',
+            borderBottom: activeTab === 'consulta' ? '2px solid white' : '2px solid transparent',
             transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
           }}
         >
@@ -475,12 +501,12 @@ export default function Payment() {
       {closingResult && (
         <div className="card print-area" style={{ padding: '24px', marginBottom: '24px', borderLeft: '4px solid var(--primary)', background: 'var(--bg-card)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <FileText size={20} /> Comprovante de Fechamento de Caixa
             </h3>
             <button 
               onClick={() => setClosingResult(null)}
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
             >
               <X size={20} />
             </button>
@@ -501,7 +527,7 @@ export default function Payment() {
             </div>
           </div>
 
-          <h4 style={{ margin: '0 0 12px', fontSize: '0.95rem', color: 'var(--text-muted)' }}>Conciliação de Dinheiro Físico</h4>
+          <h4 style={{ margin: '0 0 12px', fontSize: '0.95rem', color: 'white' }}>Conciliação de Dinheiro Físico</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.9rem', marginBottom: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Dinheiro Esperado no Sistema:</span>
@@ -551,12 +577,12 @@ export default function Payment() {
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <Lock size={48} color="var(--danger)" style={{ margin: '0 auto 12px' }} />
             <h3 style={{ fontSize: '1.25rem', margin: '0 0 8px' }}>Abertura de Turno Requerida</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>O operador precisa abrir o caixa com o fundo de troco para iniciar as vendas do dia.</p>
+            <p style={{ color: 'white', fontSize: '0.85rem', margin: 0 }}>O operador precisa abrir o caixa com o fundo de troco para iniciar as vendas do dia.</p>
           </div>
 
           <form onSubmit={handleOpenSession} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Nome do Operador / Gerente *</label>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'white' }}>Nome do Operador / Gerente *</label>
               <div style={{ position: 'relative' }}>
                 <input 
                   type="text" 
@@ -569,12 +595,12 @@ export default function Payment() {
                   }}
                   required
                 />
-                <User size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <User size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'white' }} />
               </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Fundo de Troco Inicial (Preparo) *</label>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'white' }}>Fundo de Troco Inicial (Preparo) *</label>
               <div style={{ position: 'relative' }}>
                 <input 
                   type="number" 
@@ -588,7 +614,7 @@ export default function Payment() {
                   }}
                   required
                 />
-                <DollarSign size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <DollarSign size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'white' }} />
               </div>
             </div>
 
@@ -611,14 +637,14 @@ export default function Payment() {
           <div className="card" style={{ padding: '16px 20px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
               <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Operador Atual:</div>
+                <div style={{ fontSize: '0.8rem', color: 'white' }}>Operador Atual:</div>
                 <div style={{ fontWeight: 'bold', fontSize: '1.05rem', color: 'white' }}>{activeSession.operator_name}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>Aberto às {new Date(activeSession.opened_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                <div style={{ fontSize: '0.75rem', color: 'white', marginTop: '2px' }}>Aberto às {new Date(activeSession.opened_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
               </div>
 
               <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Saldo Dinheiro Físico:</div>
-                <div style={{ fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--success)' }}>
+                <div style={{ fontSize: '0.8rem', color: 'white' }}>Saldo Dinheiro Físico:</div>
+                <div style={{ fontWeight: 'bold', fontSize: '1.25rem', color: 'white' }}>
                   R$ {cashInDrawer.toFixed(2).replace('.', ',')}
                 </div>
               </div>
@@ -627,7 +653,7 @@ export default function Payment() {
                 <button 
                   onClick={() => setMovementType('suprimento')}
                   style={{
-                    background: 'rgba(76, 175, 80, 0.12)', color: 'var(--success)', border: '1px solid var(--success)',
+                    background: 'rgba(76, 175, 80, 0.12)', color: 'white', border: '1px solid var(--success)',
                     padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 'bold'
                   }}
                   title="Colocar dinheiro para troco"
@@ -638,7 +664,7 @@ export default function Payment() {
                 <button 
                   onClick={() => setMovementType('sangria')}
                   style={{
-                    background: 'rgba(244, 67, 54, 0.12)', color: 'var(--danger)', border: '1px solid var(--danger)',
+                    background: 'rgba(244, 67, 54, 0.12)', color: 'white', border: '1px solid var(--danger)',
                     padding: '8px 12px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', fontWeight: 'bold'
                   }}
                   title="Retirar dinheiro em espécie por segurança"
@@ -661,18 +687,18 @@ export default function Payment() {
             {/* LISTA RESUMIDA DAS ÚLTIMAS MOVIMENTAÇÕES DE CAIXA */}
             {movements.length > 0 && (
               <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-                <h4 style={{ margin: '0 0 10px', fontSize: '0.82rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Movimentações do Turno ({movements.length})</h4>
+                <h4 style={{ margin: '0 0 10px', fontSize: '0.82rem', color: 'white', textTransform: 'uppercase' }}>Movimentações do Turno ({movements.length})</h4>
                 <div style={{ maxHeight: '100px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {movements.slice(0, 5).map(m => (
                     <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', padding: '4px 8px', borderRadius: '4px', background: 'var(--bg-dark)' }}>
                       <div>
                         <span style={{ 
                           fontWeight: 'bold', marginRight: '8px',
-                          color: m.type === 'suprimento' ? 'var(--success)' : m.type === 'sangria' ? 'var(--danger)' : 'var(--primary)'
+                          color: m.type === 'suprimento' ? 'var(--success)' : m.type === 'sangria' ? 'var(--danger)' : 'white'
                         }}>
                           {m.type === 'suprimento' ? 'SUPRIMENTO' : m.type === 'sangria' ? 'SANGRIA' : `VENDA (${m.method?.toUpperCase()})`}
                         </span>
-                        <span style={{ color: 'var(--text-muted)' }}>{m.description}</span>
+                        <span style={{ color: 'white' }}>{m.description}</span>
                       </div>
                       <span style={{ fontWeight: 'bold' }}>
                         {m.type === 'sangria' ? '-' : '+'} R$ {m.amount.toFixed(2).replace('.', ',')}
@@ -689,7 +715,7 @@ export default function Payment() {
             <div className="card" style={{ textAlign: 'center', padding: '32px', borderLeft: '4px solid var(--success)', background: 'var(--bg-card)' }}>
               <CheckCircle size={48} color="var(--success)" style={{ margin: '0 auto 16px' }} />
               <h3 style={{ fontSize: '1.2rem', marginBottom: '8px' }}>Pagamento Realizado com Sucesso!</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '20px' }}>
+              <p style={{ color: 'white', fontSize: '0.9rem', marginBottom: '20px' }}>
                 A Comanda {lastPaymentInfo.comandaNumber} foi baixada e o valor de <strong>R$ {lastPaymentInfo.totalAmount.toFixed(2).replace('.', ',')}</strong> foi registrado no caixa.
               </p>
 
@@ -700,9 +726,13 @@ export default function Payment() {
                 <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }} onClick={() => setShowStandardReceipt(true)}>
                   <Receipt size={18} /> Ver Comprovante (Simples)
                 </button>
-                {lastPaymentInfo.nfce_emitted && (
+                {lastPaymentInfo.nfce_emitted ? (
                   <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--success)' }} onClick={() => setShowFiscalReceipt(true)}>
                     <Printer size={18} /> Ver Cupom Fiscal (NFC-e)
+                  </button>
+                ) : (
+                  <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--success)' }} onClick={handleEmitNfce}>
+                    <FileText size={18} /> Emitir Nota (NFC-e)
                   </button>
                 )}
               </div>
@@ -713,7 +743,7 @@ export default function Payment() {
           {searched && !paymentSuccess && (
             <>
               {orders.length === 0 ? (
-                <div className="card" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)', background: 'var(--bg-card)' }}>
+                <div className="card" style={{ textAlign: 'center', padding: '32px', color: 'white', background: 'var(--bg-card)' }}>
                   <Receipt size={36} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
                   <p>Nenhum pedido ativo ou pendente encontrado para a Comanda {comandaNumber}.</p>
                 </div>
@@ -722,14 +752,14 @@ export default function Payment() {
                   
                   {/* DETALHES DOS ITENS */}
                   <div className="card" style={{ padding: '20px', background: 'var(--bg-card)' }}>
-                    <h3 style={{ fontSize: '1rem', color: 'var(--primary)', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', marginTop: 0 }}>
+                    <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', marginTop: 0 }}>
                       Pedidos da Comanda {comandaNumber}
                     </h3>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       {orders.map((order, oIdx) => (
                         <div key={order.id} style={{ borderBottom: oIdx < orders.length - 1 ? '1px solid var(--border)' : 'none', paddingBottom: '16px' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'white', marginBottom: '8px' }}>
                             <span>Mesa {order.table_session?.table_number ?? '?'}</span>
                             <span>{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
@@ -739,10 +769,10 @@ export default function Payment() {
                               <div key={iIdx} style={{ display: 'flex', flexDirection: 'column', fontSize: '0.95rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                   <span>{item.quantity}x {item.product?.name ?? 'Item'}</span>
-                                  <span style={{ color: 'var(--text-muted)' }}>R$ {(item.unit_price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                                  <span style={{ color: 'white' }}>R$ {(item.unit_price * item.quantity).toFixed(2).replace('.', ',')}</span>
                                 </div>
                                 {/* Mostrar informações fiscais para auditoria */}
-                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontStyle: 'italic', display: 'flex', gap: '8px', marginTop: '2px' }}>
+                                <div style={{ fontSize: '0.72rem', color: 'white', fontStyle: 'italic', display: 'flex', gap: '8px', marginTop: '2px' }}>
                                   <span>NCM: {item.product?.ncm || 'N/C'}</span>
                                   <span>CFOP: {item.product?.cfop || 'N/C'}</span>
                                   <span>Regime: {item.product?.regime_tributario || 'N/C'}</span>
@@ -757,19 +787,19 @@ export default function Payment() {
                     {/* Total */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px', paddingTop: '16px', borderTop: '2px solid var(--border)', fontSize: '1.25rem', fontWeight: 'bold' }}>
                       <span>Total a Pagar:</span>
-                      <span style={{ color: 'var(--primary)' }}>R$ {totalAmount.toFixed(2).replace('.', ',')}</span>
+                      <span style={{ color: 'white' }}>R$ {totalAmount.toFixed(2).replace('.', ',')}</span>
                     </div>
                   </div>
 
                   {/* PARTE DE OPÇÕES DE PAGAMENTO */}
                   <div className="card" style={{ padding: '20px', background: 'var(--bg-card)' }}>
-                    <h3 style={{ fontSize: '1rem', color: 'var(--primary)', marginBottom: '16px', margin: 0 }}>Opções de Pagamento</h3>
+                    <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', marginBottom: '16px', margin: 0 }}>Opções de Pagamento</h3>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
                       
                       {/* Seleção de método */}
                       <div>
-                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Forma de Recebimento</label>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'white' }}>Forma de Recebimento</label>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                           <button
                             onClick={() => setPaymentMethod('dinheiro')}
@@ -807,7 +837,7 @@ export default function Payment() {
                       {/* Fluxo de Calculadora de Troco para Dinheiro */}
                       {paymentMethod === 'dinheiro' && (
                         <div style={{ background: 'var(--bg-dark)', padding: '12px', borderRadius: '8px' }}>
-                          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>Valor Entregue pelo Cliente</label>
+                          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.82rem', color: 'white' }}>Valor Entregue pelo Cliente</label>
                           <div style={{ position: 'relative' }}>
                             <input 
                               type="number" 
@@ -820,28 +850,17 @@ export default function Payment() {
                                 background: 'var(--bg-card)', color: 'white', outline: 'none'
                               }}
                             />
-                            <DollarSign size={14} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                            <DollarSign size={14} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'white' }} />
                           </div>
 
                           {receivedCash && parseFloat(receivedCash) >= totalAmount && (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '0.9rem', color: 'var(--success)', fontWeight: 'bold' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '0.9rem', color: 'white', fontWeight: 'bold' }}>
                               <span>Troco a devolver:</span>
                               <span>R$ {changeValue.toFixed(2).replace('.', ',')}</span>
                             </div>
                           )}
                         </div>
                       )}
-
-                      {/* Fluxo de NFC-e Checkbox */}
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.9rem', userSelect: 'none' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={createNfce}
-                          onChange={e => setCreateNfce(e.target.checked)}
-                          style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
-                        />
-                        <span>Emitir Cupom Fiscal (NFC-e)</span>
-                      </label>
 
                       {/* Confirmar Pagamento Button */}
                       <button 
@@ -881,8 +900,8 @@ export default function Payment() {
 
           {/* BARRA DE BUSCA */}
           <div className="card" style={{ padding: '20px', background: 'var(--bg-card)' }}>
-            <h3 style={{ fontSize: '1rem', color: 'var(--primary)', marginBottom: '6px', margin: 0 }}>Consultar Pedidos por Comanda</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: '6px 0 16px' }}>Digite o número da comanda para visualizar todos os pedidos pendentes e o total a receber.</p>
+            <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', marginBottom: '6px', margin: 0 }}>Consultar Pedidos por Comanda</h3>
+            <p style={{ color: 'white', fontSize: '0.82rem', margin: '6px 0 16px' }}>Digite o número da comanda para visualizar todos os pedidos pendentes e o total a receber.</p>
             <div style={{ display: 'flex', gap: '8px' }}>
               <div style={{ flex: 1, position: 'relative' }}>
                 <input
@@ -897,7 +916,7 @@ export default function Payment() {
                     border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none', fontSize: '1rem'
                   }}
                 />
-                <Receipt size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <Receipt size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'white' }} />
               </div>
               <button
                 className="btn btn-primary"
@@ -925,26 +944,26 @@ export default function Payment() {
                 {/* RESUMO */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                   <div className="card" style={{ padding: '16px', background: 'var(--bg-card)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Total de Pedidos</div>
+                    <div style={{ fontSize: '0.75rem', color: 'white', marginBottom: '4px' }}>Total de Pedidos</div>
                     <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'white' }}>{consultaOrders.length}</div>
                   </div>
                   <div className="card" style={{ padding: '16px', background: 'var(--bg-card)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Pendente a Pagar</div>
+                    <div style={{ fontSize: '0.75rem', color: 'white', marginBottom: '4px' }}>Pendente a Pagar</div>
                     <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'var(--danger)' }}>{pendingOrders.length}</div>
                   </div>
                   <div className="card" style={{ padding: '16px', background: 'var(--bg-card)', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Total a Receber</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--primary)' }}>R$ {pendingTotal.toFixed(2).replace('.', ',')}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'white', marginBottom: '4px' }}>Total a Receber</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'white' }}>R$ {pendingTotal.toFixed(2).replace('.', ',')}</div>
                   </div>
                 </div>
 
                 {/* LISTA DE PEDIDOS */}
                 <div className="card" style={{ padding: '20px', background: 'var(--bg-card)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
-                    <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--primary)' }}>Pedidos da Comanda #{consultaComanda}</h3>
+                    <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-main)' }}>Pedidos da Comanda #{consultaComanda}</h3>
                     <button
                       onClick={() => { setConsultaSearched(false); setConsultaOrders([]); setConsultaComanda(''); }}
-                      style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.82rem', cursor: 'pointer' }}
+                      style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '0.82rem', cursor: 'pointer' }}
                     >
                       Limpar
                     </button>
@@ -960,16 +979,16 @@ export default function Payment() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {getStatusIcon(order.status)}
                             <span style={{ fontWeight: 'bold', fontSize: '0.88rem', color: getStatusColor(order.status) }}>{getStatusText(order.status)}</span>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>— Mesa {order.table_session?.table_number ?? '?'}</span>
+                            <span style={{ fontSize: '0.8rem', color: 'white' }}>— Mesa {order.table_session?.table_number ?? '?'}</span>
                           </div>
-                          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span style={{ fontSize: '0.78rem', color: 'white' }}>{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
 
                         <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                           {order.items.map((item, iIdx) => (
                             <div key={iIdx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                               <span style={{ color: 'var(--text-main)' }}>{item.quantity}x {item.product?.name ?? 'Item'}</span>
-                              <span style={{ color: 'var(--text-muted)' }}>R$ {(item.unit_price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                              <span style={{ color: 'white' }}>R$ {(item.unit_price * item.quantity).toFixed(2).replace('.', ',')}</span>
                             </div>
                           ))}
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', paddingTop: '8px', marginTop: '4px', borderTop: '1px dashed var(--border)', fontSize: '0.95rem' }}>
@@ -985,7 +1004,7 @@ export default function Payment() {
                   <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '2px solid var(--border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: 'bold', marginBottom: '16px' }}>
                       <span>Total Pendente:</span>
-                      <span style={{ color: 'var(--primary)' }}>R$ {pendingTotal.toFixed(2).replace('.', ',')}</span>
+                      <span style={{ color: 'white' }}>R$ {pendingTotal.toFixed(2).replace('.', ',')}</span>
                     </div>
                     {pendingOrders.length > 0 && (
                       <button
@@ -1027,7 +1046,7 @@ export default function Payment() {
           <div className="card" style={{ width: '100%', maxWidth: '400px', padding: '24px', position: 'relative', background: 'var(--bg-card)' }}>
             <button 
               onClick={() => setMovementType(null)}
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
             >
               <X size={24} />
             </button>
@@ -1035,7 +1054,7 @@ export default function Payment() {
               {movementType === 'suprimento' ? <Plus size={20} /> : <Minus size={20} />}
               Registrar {movementType === 'suprimento' ? 'Suprimento' : 'Sangria'}
             </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: '6px' }}>
+            <p style={{ color: 'white', fontSize: '0.82rem', marginTop: '6px' }}>
               {movementType === 'suprimento' ? 'Adicionar dinheiro na gaveta para troco.' : 'Retirar notas altas da gaveta por segurança.'}
             </p>
             
@@ -1097,14 +1116,14 @@ export default function Payment() {
           <div className="card" style={{ width: '100%', maxWidth: '450px', padding: '24px', position: 'relative', background: 'var(--bg-card)' }}>
             <button 
               onClick={() => setShowCloseModal(false)}
-              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              style={{ position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}
             >
               <X size={24} />
             </button>
-            <h3 style={{ color: 'var(--primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+            <h3 style={{ color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
               <Lock size={20} /> Fechamento de Caixa Cego
             </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: 0 }}>
+            <p style={{ color: 'white', fontSize: '0.8rem', margin: 0 }}>
               O sistema não revela o saldo esperado para maior controle. Conte fisicamente os valores na gaveta e digite abaixo.
             </p>
 
@@ -1124,7 +1143,7 @@ export default function Payment() {
                     }}
                     required
                   />
-                  <DollarSign size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <DollarSign size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'white' }} />
                 </div>
               </div>
 
@@ -1143,7 +1162,7 @@ export default function Payment() {
                     }}
                     required
                   />
-                  <CreditCard size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <CreditCard size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'white' }} />
                 </div>
               </div>
 
@@ -1176,13 +1195,13 @@ export default function Payment() {
               <div>
                 <div className="spinner" style={{ border: '4px solid rgba(255,255,255,0.1)', borderLeftColor: 'var(--primary)', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }}></div>
                 <h4 style={{ margin: 0 }}>Gerando PIX Dinâmico</h4>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '8px' }}>Enviando requisição de R$ {totalAmount.toFixed(2).replace('.', ',')} para o banco...</p>
+                <p style={{ color: 'white', fontSize: '0.85rem', marginTop: '8px' }}>Enviando requisição de R$ {totalAmount.toFixed(2).replace('.', ',')} para o banco...</p>
               </div>
             )}
 
             {pixStatus === 'waiting' && (
               <div>
-                <h4 style={{ margin: '0 0 16px', color: 'var(--primary)' }}>Pague com o PIX QR Code</h4>
+                <h4 style={{ margin: '0 0 16px', color: 'var(--text-main)' }}>Pague com o PIX QR Code</h4>
                 
                 {/* Visual QR Code mock */}
                 <div style={{
@@ -1199,11 +1218,11 @@ export default function Payment() {
                 <div style={{ fontSize: '0.85rem', color: 'white', fontWeight: 'bold', marginBottom: '4px' }}>
                   Restaurante CMB Design
                 </div>
-                <div style={{ fontSize: '1.2rem', color: 'var(--primary)', fontWeight: 'bold', marginBottom: '16px' }}>
+                <div style={{ fontSize: '1.2rem', color: 'white', fontWeight: 'bold', marginBottom: '16px' }}>
                   R$ {totalAmount.toFixed(2).replace('.', ',')}
                 </div>
 
-                <div style={{ background: 'var(--bg-dark)', padding: '10px', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <div style={{ background: 'var(--bg-dark)', padding: '10px', borderRadius: '8px', fontSize: '0.8rem', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                   <div className="pulsing-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ff9800', animation: 'pulse 1.2s infinite' }}></div>
                   Aguardando notificação de pagamento instantânea...
                 </div>
@@ -1214,7 +1233,7 @@ export default function Payment() {
               <div>
                 <CheckCircle size={48} color="var(--success)" style={{ margin: '0 auto 16px' }} />
                 <h4 style={{ margin: 0, color: 'var(--success)' }}>PIX Recebido!</h4>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '8px' }}>Operação validada pelo Banco Central.</p>
+                <p style={{ color: 'white', fontSize: '0.85rem', marginTop: '8px' }}>Operação validada pelo Banco Central.</p>
               </div>
             )}
             
@@ -1237,7 +1256,7 @@ export default function Payment() {
             {cardStatus === 'waiting' && (
               <div>
                 <h4 style={{ margin: 0 }}>Insira ou Aproxime o Cartão</h4>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '8px' }}>
+                <p style={{ color: 'white', fontSize: '0.85rem', marginTop: '8px' }}>
                   Valor enviado para maquininha Smart POS: <br />
                   <strong style={{ fontSize: '1.2rem', color: 'white', display: 'block', marginTop: '4px' }}>R$ {totalAmount.toFixed(2).replace('.', ',')}</strong>
                 </p>
@@ -1247,7 +1266,7 @@ export default function Payment() {
             {cardStatus === 'reading' && (
               <div>
                 <h4 style={{ margin: 0 }}>Lendo Cartão / Processando...</h4>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '8px' }}>Não remova o cartão da maquininha...</p>
+                <p style={{ color: 'white', fontSize: '0.85rem', marginTop: '8px' }}>Não remova o cartão da maquininha...</p>
                 <div className="spinner" style={{ border: '3px solid rgba(255,255,255,0.1)', borderLeftColor: 'var(--primary)', borderRadius: '50%', width: '28px', height: '28px', animation: 'spin 1s linear infinite', margin: '16px auto 0' }}></div>
               </div>
             )}
@@ -1256,7 +1275,7 @@ export default function Payment() {
               <div>
                 <CheckCircle size={48} color="var(--success)" style={{ margin: '0 auto 16px' }} />
                 <h4 style={{ margin: 0, color: 'var(--success)' }}>Transação Aprovada!</h4>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '8px' }}>Imprimindo via do cliente...</p>
+                <p style={{ color: 'white', fontSize: '0.85rem', marginTop: '8px' }}>Imprimindo via do cliente...</p>
               </div>
             )}
             

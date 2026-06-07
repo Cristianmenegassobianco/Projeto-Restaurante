@@ -35,8 +35,8 @@ export default function Kitchen() {
     });
 
     socket.on('order_status_update', (updatedOrder) => {
-      if (updatedOrder.status === 'paid' || updatedOrder.status === 'canceled') {
-        // Remover da fila de ativos
+      if (updatedOrder.status === 'paid' || updatedOrder.status === 'canceled' || updatedOrder.status === 'delivered') {
+        // Remover da fila de ativos/tela
         setOrders(prev => prev.filter(o => o.id !== updatedOrder.id));
       } else {
         // Atualizar status
@@ -84,12 +84,12 @@ export default function Kitchen() {
 
 
 
-  const activeOrders = orders.filter(o => o.status !== 'ready' && o.status !== 'paid' && o.status !== 'canceled');
+  const activeOrders = orders.filter(o => o.status !== 'ready' && o.status !== 'paid' && o.status !== 'canceled' && o.status !== 'delivered');
   const finishedOrders = orders.filter(o => o.status === 'ready');
   const displayOrders = activeTab === 'active' ? activeOrders : finishedOrders;
 
   return (
-    <div style={{ padding: '20px', minHeight: '100vh', background: 'var(--bg-dark)' }}>
+    <div style={{ padding: '20px', minHeight: '100vh', background: '#212322', backgroundImage: 'none' }}>
       <Toaster position="top-right" />
       <header className="flex justify-between items-center mb-4 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
         <h1 className="text-xl font-bold flex items-center gap-2">
@@ -141,7 +141,7 @@ export default function Kitchen() {
 
       {/* CONTEÚDO: FILA DE PEDIDOS */}
           {displayOrders.length === 0 ? (
-            <div style={{ textAlign: 'center', marginTop: '100px', color: 'var(--text-muted)' }}>
+            <div style={{ textAlign: 'center', marginTop: '100px', color: 'white' }}>
               <ChefHat size={48} style={{ margin: '0 auto', marginBottom: '16px', opacity: 0.5 }} />
               <h3>{activeTab === 'active' ? 'Cozinha tranquila!' : 'Nenhum pedido finalizado.'}</h3>
               <p>{activeTab === 'active' ? 'Nenhum pedido na fila de preparo no momento.' : 'Os pedidos marcados como "Finalizado" aparecerão aqui.'}</p>
@@ -169,7 +169,7 @@ export default function Kitchen() {
                   </div>
                   
                   {order.waiter_name && (
-                    <div style={{ color: 'var(--primary)', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '12px' }}>
+                    <div style={{ color: 'var(--text-main)', fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '12px' }}>
                       👨‍🍳 Garçom: {order.waiter_name}
                     </div>
                   )}

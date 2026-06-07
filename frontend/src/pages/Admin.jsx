@@ -22,12 +22,12 @@ export default function Admin() {
 
   if (!isLoggedIn) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--bg-dark)', color: 'white' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#212322', backgroundImage: 'none', color: 'white' }}>
         <div className="card" style={{ padding: '32px', maxWidth: '400px', width: '100%', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px' }}>
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <Lock size={48} color="var(--primary)" style={{ margin: '0 auto 16px' }} />
             <h2 style={{ marginBottom: '8px' }}>Acesso Gerencial</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Área restrita a gerentes e funcionários.</p>
+            <p style={{ color: 'white', fontSize: '0.9rem' }}>Área restrita a gerentes e funcionários.</p>
           </div>
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
@@ -53,7 +53,7 @@ export default function Admin() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-dark)', color: 'white', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: '#212322', backgroundImage: 'none', color: 'white', display: 'flex', flexDirection: 'column' }}>
       {/* Top Navbar - Controle das Abas Gerenciais */}
       <header style={{ 
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
@@ -101,7 +101,7 @@ export default function Admin() {
           <button 
             onClick={() => setActiveTab('reports')}
             style={{
-              padding: '10px 20px', background: activeTab === 'reports' ? '#ff9800' : 'transparent',
+              padding: '10px 20px', background: activeTab === 'reports' ? 'var(--success)' : 'transparent',
               color: activeTab === 'reports' ? 'white' : 'var(--text-muted)', border: 'none', borderRadius: '8px', 
               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold',
               transition: 'all 0.2s'
@@ -114,7 +114,7 @@ export default function Admin() {
             onClick={() => window.open('/waiter', '_blank')}
             style={{
               padding: '10px 20px', background: 'transparent',
-              color: 'var(--primary)', border: '1px solid var(--primary)', borderRadius: '8px', 
+              color: 'white', border: '1px solid var(--primary)', borderRadius: '8px', 
               cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold',
               transition: 'all 0.2s'
             }}
