@@ -374,15 +374,15 @@ p { color: var(--text-muted); line-height: 1.5; }
 .product-suggestion-price { font-size: 1.1rem; color: #C0AAB1; font-weight: bold; font-family: 'Outfit', sans-serif; }
 
 @media (max-width: 768px) {
-  .product-container { padding: 20px 10px; }
+  .product-container { padding: 15px 10px; }
   .product-card { padding: 25px 15px; gap: 20px; }
-  .product-layout { gap: 25px; }
-  .product-image-wrapper { flex: 1 1 100%; max-width: 100%; margin-bottom: 10px; }
+  .product-layout { gap: 20px; flex-direction: column; }
+  .product-image-wrapper { flex: 1 1 100%; max-width: calc(100% - 24px); margin: 12px auto 20px; }
   .product-info-wrapper { flex: 1 1 100%; padding: 0; }
-  .product-header { flex-direction: column; gap: 10px; margin-bottom: 20px; padding-bottom: 15px; }
-  .product-title { font-size: 1.8rem; }
-  .product-price { font-size: 1.6rem; }
-  .product-suggestion-item { min-width: 150px; max-width: 170px; padding: 10px; }
-  .product-suggestion-title { font-size: 0.85rem; letter-spacing: 0.5px; }
+  .product-header { flex-direction: column; gap: 8px; margin-bottom: 20px; padding-bottom: 15px; }
+  .product-title { font-size: 1.6rem; word-break: break-word; }
+  .product-price { font-size: 1.5rem; }
+  .product-suggestion-item { min-width: 140px; max-width: 160px; padding: 10px; }
+  .product-suggestion-title { font-size: 0.85rem; letter-spacing: 0px; }
   .product-suggestion-price { font-size: 0.95rem; }
 }
