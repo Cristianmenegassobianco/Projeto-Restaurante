@@ -18,13 +18,14 @@ export default function(prisma) {
       const { startDate, endDate } = req.query;
       const now = new Date();
 
-      const queryStart = startDate ? new Date(startDate + 'T00:00:00') : getStartOfDay(new Date(now));
+      // Ajuste de timezone fixo para Brasil (-03:00) para garantir que funcione em qualquer servidor
+      const queryStart = startDate 
+        ? new Date(`${startDate}T00:00:00-03:00`) 
+        : getStartOfDay(new Date(now));
       
-      // Se tiver endDate, pegamos o final do dia da data escolhida.
       let queryEnd = getEndOfDay(new Date(now));
       if (endDate) {
-         const eDate = new Date(endDate + 'T00:00:00');
-         queryEnd = getEndOfDay(eDate);
+         queryEnd = new Date(`${endDate}T23:59:59.999-03:00`);
       }
 
       // 1. Vendas no período (Orders with status 'paid')

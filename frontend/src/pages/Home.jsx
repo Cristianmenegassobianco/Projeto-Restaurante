@@ -77,7 +77,7 @@ export default function Home() {
   };
 
   return (
-    <div style={{ backgroundColor: '#212322', color: '#D0BAAA', minHeight: '100vh', fontFamily: 'Georgia, serif', backgroundImage: 'radial-gradient(#511F26 1px, transparent 1px)', backgroundSize: '40px 40px', backgroundPosition: '0 0, 20px 20px', paddingBottom: '60px' }}>
+    <div style={{ backgroundColor: '#212322', color: '#D0BAAA', minHeight: '100vh', fontFamily: 'Georgia, serif', backgroundImage: 'radial-gradient(#511F26 1px, transparent 1px)', backgroundSize: '40px 40px', backgroundPosition: '0 0, 20px 20px', paddingBottom: '0px' }}>
       
       {/* HEADER RÚSTICO/SOFISTICADO */}
       <header style={{ padding: '40px 20px', textAlign: 'center', borderBottom: '4px double #511F26', background: 'rgba(33, 35, 34, 0.95)', backdropFilter: 'blur(10px)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', position: 'relative', zIndex: 10 }}>
@@ -94,6 +94,7 @@ export default function Home() {
         <img 
           src="/logo.png" 
           alt="Vino Della Collina Bianco" 
+          loading="lazy"
           style={{ 
             height: '140px', 
             margin: '0 auto 5px', 
@@ -166,7 +167,7 @@ export default function Home() {
               {weeklyHighlights.map(product => (
                 <div key={product.id} onClick={() => navigate(`/product/${product.id}`, { state: { product } })} style={{ flex: '0 0 260px', background: '#212322', border: '1px solid #3D312A', padding: '15px', cursor: 'pointer', transition: 'transform 0.3s', boxShadow: '3px 3px 10px rgba(0,0,0,0.3)' }}>
                   <div style={{ position: 'relative' }}>
-                    <img src={product.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'} alt={product.name} style={{ width: '100%', height: '160px', objectFit: 'cover', border: '2px solid #3D312A', filter: 'sepia(10%)' }} />
+                    <img src={product.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'} alt={product.name} loading="lazy" style={{ width: '100%', height: '160px', objectFit: 'cover', border: '2px solid #3D312A', filter: 'sepia(10%)' }} />
                     <span style={{ position: 'absolute', top: '10px', right: '10px', background: '#511F26', color: '#F2EEDF', padding: '4px 8px', fontSize: '0.7rem', fontFamily: '"Outfit", sans-serif', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #C0AAB1' }}>
                       <Star size={12} fill="#F2EEDF" /> Destaque
                     </span>
@@ -218,7 +219,7 @@ export default function Home() {
                       <div style={{ position: 'absolute', bottom: '5px', left: '5px', width: '10px', height: '10px', borderBottom: '1px solid #C0AAB1', borderLeft: '1px solid #C0AAB1' }}></div>
                       <div style={{ position: 'absolute', bottom: '5px', right: '5px', width: '10px', height: '10px', borderBottom: '1px solid #C0AAB1', borderRight: '1px solid #C0AAB1' }}></div>
 
-                      {product.image_url && <img src={product.image_url} alt={product.name} style={{ width: '100%', objectFit: 'cover', marginBottom: '20px', border: '3px solid #3D312A', filter: 'sepia(20%)' }} />}
+                      {product.image_url && <img src={product.image_url} alt={product.name} loading="lazy" style={{ width: '100%', objectFit: 'cover', marginBottom: '20px', border: '3px solid #3D312A', filter: 'sepia(20%)' }} />}
                       
                       <h4 style={{ color: '#D0BAAA', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>{product.name}</h4>
                       <p style={{ fontSize: '1rem', color: '#B5B4A2', fontStyle: 'italic', marginBottom: '20px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: '1.6' }}>{product.card_message || 'Toque para ver detalhes'}</p>
@@ -334,6 +335,26 @@ export default function Home() {
         </>
       )}
 
+      {/* FOOTER DESENVOLVIDO POR */}
+      <footer style={{ 
+        padding: '30px 20px', 
+        marginTop: '0', 
+        display: 'flex', 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        gap: '20px', 
+        zIndex: 10, 
+        position: 'relative', 
+        flexWrap: 'wrap',
+        background: 'rgba(33, 35, 34, 0.95)',
+        borderTop: '4px double #511F26',
+        boxShadow: '0 -10px 30px rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(10px)'
+      }}>
+         <span style={{ color: '#D0BAAA', fontSize: '1rem', fontStyle: 'italic', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: '"Outfit", sans-serif' }}>Desenvolvido por</span>
+         <img src="/serve-master.png" alt="Serve Master Premium Eatery Services" loading="lazy" style={{ height: '140px', marginTop: '-60px', marginBottom: '0', objectFit: 'contain', filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.5))' }} />
+      </footer>
     </div>
   );
 }

@@ -7,7 +7,8 @@ export default function Reports() {
   const [loading, setLoading] = useState(true);
 
   // Filtros de data (YYYY-MM-DD)
-  const today = new Date().toISOString().split('T')[0];
+  // Use toLocaleDateString('en-CA') to get YYYY-MM-DD in local time
+  const today = new Date().toLocaleDateString('en-CA');
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
 

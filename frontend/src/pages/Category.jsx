@@ -75,7 +75,7 @@ export default function Category() {
               <div style={{ position: 'absolute', bottom: '5px', right: '5px', width: '10px', height: '10px', borderBottom: '1px solid #C0AAB1', borderRight: '1px solid #C0AAB1' }}></div>
 
               {product.image_url && (
-                <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '130px', objectFit: 'cover', marginBottom: '15px', border: '3px solid #3D312A', filter: 'sepia(20%)' }} />
+                <img src={product.image_url} alt={product.name} loading="lazy" style={{ width: '100%', height: '130px', objectFit: 'cover', marginBottom: '15px', border: '3px solid #3D312A', filter: 'sepia(20%)' }} />
               )}
               
               <h4 style={{ fontSize: '1.1rem', color: '#D0BAAA', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>{product.name}</h4>

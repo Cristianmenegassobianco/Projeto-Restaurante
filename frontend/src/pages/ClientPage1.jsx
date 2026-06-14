@@ -91,6 +91,26 @@ export default function ClientPage1() {
           }
         </div>
       </div>
+      {/* FOOTER DESENVOLVIDO POR */}
+      <footer style={{ 
+        padding: '30px 20px', 
+        marginTop: '0', 
+        display: 'flex', 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        gap: '20px', 
+        zIndex: 10, 
+        position: 'relative', 
+        flexWrap: 'wrap',
+        background: 'rgba(33, 35, 34, 0.95)',
+        borderTop: '4px double #511F26',
+        boxShadow: '0 -10px 30px rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(10px)'
+      }}>
+         <span style={{ color: '#D0BAAA', fontSize: '1rem', fontStyle: 'italic', letterSpacing: '2px', textTransform: 'uppercase', fontFamily: '"Outfit", sans-serif' }}>Desenvolvido por</span>
+         <img src="/serve-master.png" alt="Serve Master Premium Eatery Services" style={{ height: '140px', marginTop: '-60px', marginBottom: '0', objectFit: 'contain', filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.5))' }} />
+      </footer>
     </div>
   );
 }
