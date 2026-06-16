@@ -124,8 +124,8 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
       </div>
       
       {/* Imagens Adicionais */}
-      <div style={{ background: 'rgba(255,255,255,0.05)', padding: '15px', borderRadius: '8px', border: '1px solid var(--border)' }}>
-        <label style={{ display: 'block', marginBottom: '10px', fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold' }}>Imagens Adicionais (Galeria)</label>
+      <div>
+        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Imagens Adicionais (Galeria)</label>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
           {(Array.isArray(formData.additional_images) ? formData.additional_images : []).filter(img => img && img.trim() !== '').map((img, idx) => (
             <div key={idx} style={{ position: 'relative' }}>
@@ -136,11 +136,11 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Enviar Arquivo</label>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Enviar Arquivo</label>
             <input type="file" accept="image/*" onChange={handleAdditionalImageUpload} disabled={uploadingImage} style={{ width: '100%', padding: '7px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Ou cole a URL</label>
+            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Ou cole a URL</label>
             <div style={{ display: 'flex', gap: '8px' }}>
               <input type="text" id="add_img_url_input" placeholder="https://..." onKeyDown={(e) => {
                 if (e.key === 'Enter') {
