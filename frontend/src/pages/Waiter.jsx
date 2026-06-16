@@ -394,11 +394,11 @@ export default function Waiter() {
               if (isMe) {
                 bgColor = 'rgba(46, 213, 115, 0.15)';
                 borderColor = 'var(--success)';
-                textColor = 'var(--success)';
+                textColor = 'white';
               } else {
                 bgColor = 'rgba(160, 82, 45, 0.15)'; // Sienna (Marrom)
                 borderColor = '#A0522D';
-                textColor = '#D2691E'; // Texto claro marrom
+                textColor = 'white';
               }
             }
 
