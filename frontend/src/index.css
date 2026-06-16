@@ -373,11 +373,24 @@ p { color: var(--text-muted); line-height: 1.5; }
 .product-suggestion-title { font-size: 1.1rem; color: #D0BAAA; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px; word-wrap: break-word; overflow-wrap: break-word; hyphens: auto; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; width: 100%; }
 .product-suggestion-price { font-size: 1.1rem; color: #C0AAB1; font-weight: bold; font-family: 'Outfit', sans-serif; }
 
+/* Product Gallery Classes */
+.product-image-bg-dashed { position: absolute; inset: -12px; border: 1px dashed #511F26; z-index: 0; }
+.product-gallery-layout { position: relative; z-index: 1; display: flex; flex-direction: column; }
+.product-main-image { width: 100%; aspect-ratio: 1/1; object-fit: cover; border: 4px solid #3D312A; filter: sepia(15%); box-shadow: 0 8px 30px rgba(0,0,0,0.6); transition: all 0.3s; }
+.product-thumbnails { display: flex; gap: 12px; margin-top: 20px; overflow-x: auto; padding-bottom: 10px; }
+.product-thumb { width: 70px; height: 70px; object-fit: cover; cursor: pointer; border-radius: 4px; transition: all 0.2s; opacity: 0.7; filter: sepia(30%); border: 2px solid #3D312A; flex-shrink: 0; }
+.product-thumb.active { opacity: 1; filter: none; border-color: #C0AAB1; }
+
 @media (max-width: 768px) {
   .product-container { padding: 15px 10px; }
   .product-card { padding: 25px 15px; gap: 20px; }
   .product-layout { gap: 20px; flex-direction: column; }
-  .product-image-wrapper { flex: 1 1 100%; max-width: 280px; margin: 12px auto 20px; }
+  .product-image-wrapper { flex: 1 1 100%; max-width: 100%; margin: 12px 0 24px 0; }
+  .product-gallery-layout { flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 0; }
+  .product-main-image { flex: unset; width: calc(80% - 5.6px); }
+  .product-thumbnails { flex-direction: column; margin-top: 0; gap: 12px; width: calc(20% - 10.4px); overflow-y: auto; max-height: none; padding: 0; scrollbar-width: none; }
+  .product-thumbnails::-webkit-scrollbar { display: none; }
+  .product-thumb { width: 100%; height: auto; aspect-ratio: 1/1; }
   .product-info-wrapper { flex: 1 1 100%; padding: 0; }
   .product-header { flex-direction: column; gap: 8px; margin-bottom: 20px; padding-bottom: 15px; }
   .product-title { font-size: 1.6rem; word-break: break-word; }
