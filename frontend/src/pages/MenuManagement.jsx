@@ -10,7 +10,8 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
       addImgs = typeof initialData.additional_images === 'string' ? JSON.parse(initialData.additional_images) : initialData.additional_images;
     }
     return initialData ? { ...initialData, additional_images: addImgs } : {
-      name: '', category_id: '', price: '', description: '', image_url: '', additional_images: [], card_message: 'Toque para ver detalhes', suggested_products_ids: []
+      name: '', category_id: '', price: '', description: '', image_url: '', additional_images: [], card_message: 'Toque para ver detalhes', suggested_products_ids: [],
+      ncm: 'N/C', cfop: 'N/C', regime_tributario: 'Substituição Tributária'
     };
   });
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -165,6 +166,21 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
       <div>
         <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Mensagem no Card (Página Inicial)</label>
         <input type="text" name="card_message" placeholder="Ex: Toque para ver detalhes" value={formData.card_message || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>NCM</label>
+          <input type="text" name="ncm" placeholder="NCM" value={formData.ncm || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>CFOP</label>
+          <input type="text" name="cfop" placeholder="CFOP" value={formData.cfop || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Regime Tributário</label>
+          <input type="text" name="regime_tributario" placeholder="Regime" value={formData.regime_tributario || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
+        </div>
       </div>
 
       <div>
@@ -338,7 +354,10 @@ export default function MenuManagement() {
           image_url: formData.image_url || '',
           additional_images: formData.additional_images || [],
           card_message: formData.card_message || 'Toque para ver detalhes',
-          suggested_products_ids: formData.suggested_products_ids || []
+          suggested_products_ids: formData.suggested_products_ids || [],
+          ncm: formData.ncm || 'N/C',
+          cfop: formData.cfop || 'N/C',
+          regime_tributario: formData.regime_tributario || 'Substituição Tributária'
         })
       });
 
@@ -374,7 +393,10 @@ export default function MenuManagement() {
           image_url: formData.image_url || '',
           additional_images: formData.additional_images || [],
           card_message: formData.card_message || 'Toque para ver detalhes',
-          suggested_products_ids: formData.suggested_products_ids || []
+          suggested_products_ids: formData.suggested_products_ids || [],
+          ncm: formData.ncm || 'N/C',
+          cfop: formData.cfop || 'N/C',
+          regime_tributario: formData.regime_tributario || 'Substituição Tributária'
         })
       });
 

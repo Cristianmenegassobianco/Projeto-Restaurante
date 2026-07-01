@@ -35,8 +35,8 @@ model Product {
   card_message      String?     @default("Toque para ver detalhes")
   is_available      Boolean     @default(true)
   is_featured       Boolean     @default(false)
-  ncm               String      @default("")
-  cfop              String      @default("")
+  ncm               String      @default("N/C")
+  cfop              String      @default("N/C")
   regime_tributario String      @default("Substituição Tributária")
   order_items       OrderItem[]
   category          Category    @relation(fields: [category_id], references: [id])

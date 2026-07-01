@@ -19,8 +19,8 @@ export default function productsRoutes(prisma) {
           image_url,
           is_available: true,
           additional_images: additional_images ? JSON.stringify(additional_images) : "[]",
-          ncm: ncm || "",
-          cfop: cfop || "",
+          ncm: ncm || "N/C",
+          cfop: cfop || "N/C",
           regime_tributario: regime_tributario || "Substituição Tributária",
           card_message: card_message || "Toque para ver detalhes",
           suggestedProducts: suggested_products_ids && suggested_products_ids.length > 0 ? {
@@ -71,8 +71,8 @@ export default function productsRoutes(prisma) {
           price: parseFloat(price),
           image_url,
           additional_images: additional_images ? JSON.stringify(additional_images) : "[]",
-          ncm: ncm || "",
-          cfop: cfop || "",
+          ncm: ncm || "N/C",
+          cfop: cfop || "N/C",
           regime_tributario: regime_tributario || "Substituição Tributária",
           card_message: card_message || "Toque para ver detalhes",
           suggestedProducts: suggested_products_ids ? {
