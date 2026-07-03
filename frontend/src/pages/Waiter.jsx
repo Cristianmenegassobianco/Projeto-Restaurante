@@ -116,15 +116,11 @@ export default function Waiter() {
     socket.on('order_status_update', (updatedOrder) => {
       setMyOrders(prev => {
         const index = prev.findIndex(o => o.id === updatedOrder.id);
+        
         if (index > -1) {
-          if (prev[index].status !== 'ready' && updatedOrder.status === 'ready') {
-            toast.success(`O Pedido da Mesa ${updatedOrder.table_session?.table_number || prev[index].table} está PRONTO para entrega!`, {
-              duration: 6000,
-              icon: '🍽️',
-              style: { background: '#2ed573', color: 'white', fontWeight: 'bold' }
-            });
-            playBeep();
-          }
+          // If the status is changing to 'ready', we handle the notification outside
+          // by letting a separate useEffect handle it, OR we just check the current state 
+          // but we can't reliably read 'myOrders' here due to stale closures if we don't use functional updates.
           
           const newOrders = [...prev];
           newOrders[index] = { ...newOrders[index], status: updatedOrder.status };
@@ -132,6 +128,16 @@ export default function Waiter() {
         }
         return prev;
       });
+
+      // Show notification if it's ready
+      if (updatedOrder.status === 'ready') {
+        toast.success(`O Pedido da Mesa ${updatedOrder.table_session?.table_number || updatedOrder.table || 'S/N'} está PRONTO para entrega!`, {
+          duration: 6000,
+          icon: '🍽️',
+          style: { background: '#2ed573', color: 'white', fontWeight: 'bold' }
+        });
+        playBeep();
+      }
     });
     
     return () => socket.disconnect();
