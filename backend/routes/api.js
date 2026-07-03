@@ -183,6 +183,26 @@ app.put('/api/orders/:id/status', async (req, res) => {
   }
 });
 
+// 7. Waiter: Get active orders
+app.get('/api/waiter/orders', async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        status: { notIn: ['paid', 'canceled'] }
+      },
+      include: {
+        items: { include: { product: true } },
+        table_session: true
+      },
+      orderBy: { created_at: 'desc' },
+      take: 50
+    });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch waiter orders' });
+  }
+});
+
 // 10. Categories: Get list
 app.get('/api/categories', async (req, res) => {
   try {

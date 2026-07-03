@@ -30,7 +30,7 @@ export default function Waiter() {
   const [glassesIceLemonCount, setGlassesIceLemonCount] = useState(0);
   
   const [activeTab, setActiveTab] = useState('order'); // 'order' or 'history'
-  const [myOrders, setMyOrders] = useState(() => JSON.parse(localStorage.getItem('myOrders') || '[]'));
+  const [myOrders, setMyOrders] = useState([]);
   
   const [waiterCalls, setWaiterCalls] = useState([]);
 
@@ -65,6 +65,43 @@ export default function Waiter() {
       });
     });
 
+    // Fetch initial orders
+    fetch('/api/waiter/orders')
+      .then(res => res.json())
+      .then(data => {
+        const mappedOrders = data.map(order => ({
+          id: order.id,
+          time: new Date(order.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          table: order.table_session?.table_number || 'S/N',
+          comanda: order.comanda_number,
+          total: order.total_amount,
+          itemsCount: order.items?.reduce((acc, item) => acc + item.quantity, 0) || 0,
+          itemsList: order.items?.map(item => `${item.quantity}x ${item.product?.name}`).join(', ') || '',
+          status: order.status,
+          waiter_name: order.waiter_name || 'Desconhecido'
+        }));
+        setMyOrders(mappedOrders);
+      })
+      .catch(console.error);
+
+    socket.on('new_order', (order) => {
+      setMyOrders(prev => {
+        if (prev.some(o => o.id === order.id)) return prev;
+        const newO = {
+          id: order.id,
+          time: new Date(order.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          table: order.table_session?.table_number || 'S/N',
+          comanda: order.comanda_number,
+          total: order.total_amount,
+          itemsCount: order.items?.reduce((acc, item) => acc + item.quantity, 0) || 0,
+          itemsList: order.items?.map(item => `${item.quantity}x ${item.product?.name}`).join(', ') || '',
+          status: order.status,
+          waiter_name: order.waiter_name || 'Desconhecido'
+        };
+        return [newO, ...prev];
+      });
+    });
+
     socket.on('waiter_call_attended', ({ call_id, waiter_name }) => {
       setWaiterCalls(prev => prev.map(call => 
         call.id === call_id ? { ...call, status: 'attended', attendedBy: waiter_name } : call
@@ -82,7 +119,6 @@ export default function Waiter() {
         if (index > -1) {
           const newOrders = [...prev];
           newOrders[index] = { ...newOrders[index], status: updatedOrder.status };
-          localStorage.setItem('myOrders', JSON.stringify(newOrders));
           return newOrders;
         }
         return prev;
@@ -135,7 +171,6 @@ export default function Waiter() {
         if (res.ok) {
           const updatedOrders = myOrders.filter(o => o.id !== orderId);
           setMyOrders(updatedOrders);
-          localStorage.setItem('myOrders', JSON.stringify(updatedOrders));
           toast.success('Pedido apagado da cozinha com sucesso!');
         } else {
           toast.error('Não foi possível cancelar na cozinha (Pode ser um pedido muito antigo).');
@@ -164,7 +199,6 @@ export default function Waiter() {
   const clearHistory = () => {
     if (window.confirm('Tem certeza que deseja limpar todo o seu histórico de pedidos da tela? (Isso NÃO cancelará os pedidos que já estão na cozinha)')) {
       setMyOrders([]);
-      localStorage.removeItem('myOrders');
     }
   };
 
@@ -276,20 +310,20 @@ export default function Waiter() {
       if (orderRes.ok) {
         toast.success('Pedido enviado com sucesso para a cozinha!');
         
-        // Save to local history
+        // Save to local history immediately (will be replaced by socket if needed, but we check for duplicates)
         const newOrder = {
           id: orderData.id || Date.now(),
-          time: new Date().toLocaleTimeString(),
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           table: tableNumber || 'S/N',
           comanda: comandaNumber,
           total: cartTotal,
           itemsCount: cartItemsCount,
           itemsList: cart.map(item => `${item.quantity}x ${item.product.name}`).join(', ') + utensilsString,
-          status: orderData.status || 'pending'
+          status: orderData.status || 'pending',
+          waiter_name: waiterName
         };
         const updatedOrders = [newOrder, ...myOrders].slice(0, 50);
         setMyOrders(updatedOrders);
-        localStorage.setItem('myOrders', JSON.stringify(updatedOrders));
 
         // Reset waiter state for next order
         setCart([]);
@@ -469,7 +503,10 @@ export default function Waiter() {
                   return (
                     <div key={order.id} className="card" style={{ padding: '16px', borderLeft: `4px solid ${statusColor}` }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
-                        <span style={{ fontWeight: 'bold', fontSize: '1.05rem' }}>Mesa {order.table} {order.comanda ? `| Cmd ${order.comanda}` : ''}</span>
+                        <div>
+                          <span style={{ fontWeight: 'bold', fontSize: '1.05rem' }}>Mesa {order.table} {order.comanda ? `| Cmd ${order.comanda}` : ''}</span>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>Garçom: {order.waiter_name}</div>
+                        </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={{ fontSize: '0.8rem', background: statusColor, color: 'white', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold', textAlign: 'center' }}>{statusText}</span>
                           <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{order.time}</span>
