@@ -134,7 +134,7 @@ export default function Waiter() {
         toast.success(`O Pedido da Mesa ${updatedOrder.table_session?.table_number || updatedOrder.table || 'S/N'} está PRONTO para entrega!`, {
           duration: 6000,
           icon: '🍽️',
-          style: { background: '#2ed573', color: 'white', fontWeight: 'bold' }
+          style: { background: '#511F26', color: 'white', fontWeight: 'bold' }
         });
         playBeep();
       }
