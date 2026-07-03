@@ -9,22 +9,6 @@ export default function Product() {
   if (!state?.product) return <Navigate to="/" />;
   const product = state.product;
 
-  const [currentMainImage, setCurrentMainImage] = useState(product?.image_url);
-
-  React.useEffect(() => {
-    setCurrentMainImage(product?.image_url);
-  }, [product?.id]);
-
-  let additionalImages = [];
-  try {
-    if (typeof product.additional_images === 'string') {
-      additionalImages = JSON.parse(product.additional_images);
-    } else if (Array.isArray(product.additional_images)) {
-      additionalImages = product.additional_images;
-    }
-  } catch (e) {}
-
-  const allImages = [product.image_url, ...additionalImages].filter(img => img && typeof img === 'string' && img.trim() !== '');
 
   return (
     <div style={{ backgroundColor: '#3D312A', color: '#D0BAAA', minHeight: '100vh', fontFamily: 'Georgia, serif', backgroundImage: 'radial-gradient(#511F26 1px, transparent 1px)', backgroundSize: '40px 40px', backgroundPosition: '0 0, 20px 20px', paddingBottom: '0px' }}>
@@ -42,33 +26,17 @@ export default function Product() {
           <div className="product-layout">
             
             {/* COLUNA 1: IMAGEM */}
-            {allImages.length > 0 && (
+            {product.image_url && (
               <div className="product-image-wrapper">
                 <div className="product-image-bg-dashed"></div>
                 
                 <div className="product-gallery-layout">
                   <img 
-                    src={currentMainImage || product.image_url} 
+                    src={product.image_url} 
                     alt={product.name} 
                     loading="lazy"
                     className="product-main-image"
                   />
-                  
-                  {allImages.length > 1 && (
-                    <div className="product-thumbnails">
-                      {allImages.map((img, idx) => (
-                        <img 
-                          key={idx}
-                          src={img} 
-                          alt={`${product.name} - miniatura ${idx}`} 
-                          onClick={() => setCurrentMainImage(img)}
-                          className={`product-thumb ${currentMainImage === img ? 'active' : ''}`}
-                          onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                          onMouseLeave={(e) => { if(currentMainImage !== img) e.currentTarget.style.opacity = '0.7'; }}
-                        />
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             )}

@@ -61,33 +61,6 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
     }
   };
 
-  const handleAdditionalImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploadingImage(true);
-    const formDataObj = new FormData();
-    formDataObj.append('image', file);
-
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formDataObj
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setFormData(prev => ({ ...prev, additional_images: [...(prev.additional_images || []), data.imageUrl] }));
-        toast.success('Imagem adicional enviada com sucesso!');
-      } else {
-        toast.error(data.error || 'Erro ao enviar imagem.');
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error('Erro de conexão ao enviar imagem.');
-    } finally {
-      setUploadingImage(false);
-    }
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -124,45 +97,7 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
         </div>
       </div>
       
-      {/* Imagens Adicionais */}
-      <div>
-        <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Imagens Adicionais (Galeria)</label>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
-          {(Array.isArray(formData.additional_images) ? formData.additional_images : []).filter(img => img && img.trim() !== '').map((img, idx) => (
-            <div key={idx} style={{ position: 'relative' }}>
-              <img src={img} alt={`Adicional ${idx}`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border)' }} />
-              <button type="button" onClick={() => setFormData(prev => ({ ...prev, additional_images: prev.additional_images.filter((_, i) => i !== idx) }))} style={{ position: 'absolute', top: '-5px', right: '-5px', background: 'var(--danger)', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>X</button>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Enviar Arquivo</label>
-            <input type="file" accept="image/*" onChange={handleAdditionalImageUpload} disabled={uploadingImage} style={{ width: '100%', padding: '7px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Ou cole a URL</label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input type="text" id="add_img_url_input" placeholder="https://..." onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  if (e.target.value.trim() !== '') {
-                    setFormData(prev => ({ ...prev, additional_images: [...(Array.isArray(prev.additional_images) ? prev.additional_images : []), e.target.value.trim()] }));
-                    e.target.value = '';
-                  }
-                }
-              }} style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
-              <button type="button" onClick={() => {
-                const input = document.getElementById('add_img_url_input');
-                if (input && input.value.trim() !== '') {
-                  setFormData(prev => ({ ...prev, additional_images: [...(Array.isArray(prev.additional_images) ? prev.additional_images : []), input.value.trim()] }));
-                  input.value = '';
-                }
-              }} style={{ padding: '0 15px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem' }}>Adicionar</button>
-            </div>
-          </div>
-        </div>
-      </div>
+
       <div>
         <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Mensagem no Card (Página Inicial)</label>
         <input type="text" name="card_message" placeholder="Ex: Toque para ver detalhes" value={formData.card_message || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
