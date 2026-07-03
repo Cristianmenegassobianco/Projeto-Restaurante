@@ -117,6 +117,15 @@ export default function Waiter() {
       setMyOrders(prev => {
         const index = prev.findIndex(o => o.id === updatedOrder.id);
         if (index > -1) {
+          if (prev[index].status !== 'ready' && updatedOrder.status === 'ready') {
+            toast.success(`O Pedido da Mesa ${updatedOrder.table_session?.table_number || prev[index].table} está PRONTO para entrega!`, {
+              duration: 6000,
+              icon: '🍽️',
+              style: { background: '#2ed573', color: 'white', fontWeight: 'bold' }
+            });
+            playBeep();
+          }
+          
           const newOrders = [...prev];
           newOrders[index] = { ...newOrders[index], status: updatedOrder.status };
           return newOrders;
