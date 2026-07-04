@@ -175,21 +175,33 @@ export default function Kitchen() {
                   )}
                   
                   <div style={{ marginBottom: '16px', padding: '12px', background: 'var(--bg-dark)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {order.items.map((item, idx) => (
-                      <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', paddingBottom: '8px', borderBottom: idx < order.items.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                        {item.product?.image_url && (
-                          <img 
-                            src={item.product.image_url} 
-                            alt={item.product.name} 
-                            style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '6px', flexShrink: 0 }} 
-                          />
-                        )}
-                        <div>
-                          <div className="font-bold">{item.quantity}x {item.product?.name ?? 'Item'}</div>
-                          {item.notes && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', paddingLeft: '8px', borderLeft: '2px solid var(--danger)', marginTop: '4px' }}>Obs: {item.notes}</div>}
+                    {order.items.map((item, idx) => {
+                      let displayName = item.product?.name ?? 'Item';
+                      let displayNotes = item.notes || '';
+                      
+                      // Extrair a variação [Tamanho] das observações se existir
+                      const match = displayNotes.match(/^\[(.*?)\]\s*(.*)$/);
+                      if (match) {
+                        displayName = `${displayName} - ${match[1]}`;
+                        displayNotes = match[2];
+                      }
+
+                      return (
+                        <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', paddingBottom: '8px', borderBottom: idx < order.items.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                          {item.product?.image_url && (
+                            <img 
+                              src={item.product.image_url} 
+                              alt={item.product.name} 
+                              style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '6px', flexShrink: 0 }} 
+                            />
+                          )}
+                          <div>
+                            <div className="font-bold">{item.quantity}x {displayName}</div>
+                            {displayNotes && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', paddingLeft: '8px', borderLeft: '2px solid var(--danger)', marginTop: '4px' }}>Obs: {displayNotes}</div>}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
