@@ -1,0 +1,26 @@
+Planos de Mensalidade;;;
+Produto / Plano;Básico (Pequeno);Profissional (Médio);Premium (Grande)
+Perfil do Cliente;Lanchonetes e Delivery;Bares e Restaurantes Médios;Grandes Restaurantes
+PDV (Caixa);1 PDV;Até 2 PDVs;Ilimitado
+Cardápio Digital (QR Code);Sim (Sem pedido na mesa);Sim (Com pedido na mesa);Sim (Com pedido e pagto)
+Painel do Garçom;Não;Até 3 Garçons;Ilimitado
+KDS (Tela na Cozinha);Não (Usa impressora);1 Tela;Múltiplas Telas
+Relatórios / Dashboard;Básico;Avançado;Avançado
+Suporte;Horário Comercial;Horário Comercial;24/7 (Prioritário)
+Preço Sugerido (Mensal);R$ 149,90;R$ 299,90;R$ 499,90
+
+Taxa de Adesão e Implantação (Setup Único);;
+Serviço de Implantação;Descrição;Valor Cobrado
+Instalação Padrão;Instalação do sistema no PC do Caixa e rede local;R$ 300,00
+Cadastro de Cardápio;Inserção de até 100 produtos com fotos e descrições;R$ 250,00
+Treinamento da Equipe;4 horas de treinamento (Garçons, Caixa e Gerência);R$ 200,00
+Configuração de Hardware;Configurar impressoras, tablets e Wi-Fi;R$ 150,00
+Pacote Completo (Setup);Todos os serviços acima juntos com desconto;R$ 750,00
+
+Projeção de Faturamento (Vendendo o Plano Profissional + Setup Completo);;;
+Quantidade de Clientes;Receita de Setup (Única);Faturamento Mensal Recorrente;Faturamento Anual (Mensalidades)
+1 Cliente;R$ 750,00;R$ 299,90;R$ 3.598,80
+5 Clientes;R$ 3.750,00;R$ 1.499,50;R$ 17.994,00
+10 Clientes;R$ 7.500,00;R$ 2.999,00;R$ 35.988,00
+20 Clientes;R$ 15.000,00;R$ 5.998,00;R$ 71.976,00
+50 Clientes;R$ 37.500,00;R$ 14.995,00;R$ 179.940,00

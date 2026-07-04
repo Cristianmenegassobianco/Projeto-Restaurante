@@ -32,6 +32,7 @@ model Product {
   price             Float
   image_url         String?
   additional_images String?     @default("[]")
+  sizes             String?     @default("[]")
   card_message      String?     @default("Toque para ver detalhes")
   is_available      Boolean     @default(true)
   is_featured       Boolean     @default(false)

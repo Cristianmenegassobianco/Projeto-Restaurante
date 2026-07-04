@@ -9,6 +9,10 @@ export default function Product() {
   if (!state?.product) return <Navigate to="/" />;
   const product = state.product;
 
+  let parsedSizes = [];
+  try {
+    parsedSizes = product.sizes ? (typeof product.sizes === 'string' ? JSON.parse(product.sizes) : product.sizes) : [];
+  } catch(e) {}
 
   return (
     <div style={{ backgroundColor: '#3D312A', color: '#D0BAAA', minHeight: '100vh', fontFamily: 'Georgia, serif', backgroundImage: 'radial-gradient(#511F26 1px, transparent 1px)', backgroundSize: '40px 40px', backgroundPosition: '0 0, 20px 20px', paddingBottom: '0px' }}>
@@ -47,10 +51,26 @@ export default function Product() {
                 <h2 className="product-title">
                   {product.name}
                 </h2>
-                <span className="product-price">
-                  R$ {product.price.toFixed(2).replace('.', ',')}
-                </span>
+                {parsedSizes.length === 0 && (
+                  <span className="product-price">
+                    R$ {product.price.toFixed(2).replace('.', ',')}
+                  </span>
+                )}
               </div>
+
+              {parsedSizes.length > 0 && (
+                <div style={{ marginBottom: '20px' }}>
+                  <h4 style={{ fontSize: '1.2rem', color: '#C0AAB1', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>Tamanhos / Porções</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {parsedSizes.map((size, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px dotted #511F26', paddingBottom: '4px' }}>
+                        <span style={{ fontSize: '1.1rem', color: '#F2EEDF' }}>{size.name}</span>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#C0AAB1', fontFamily: '"Outfit", sans-serif' }}>R$ {parseFloat(size.price).toFixed(2).replace('.', ',')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <h4 style={{ fontSize: '1.2rem', color: '#C0AAB1', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>Apreciação</h4>
               <p style={{ fontSize: '1.1rem', color: '#B5B4A2', lineHeight: '1.8', marginBottom: '40px', fontStyle: 'italic' }}>

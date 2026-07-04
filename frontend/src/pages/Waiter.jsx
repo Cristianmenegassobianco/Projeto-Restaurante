@@ -311,12 +311,18 @@ export default function Waiter() {
           total_amount: cartTotal,
           comanda_number: comandaNumber || null,
           waiter_name: waiterName,
-          items: cart.map(item => ({
-            product_id: item.product.id,
-            quantity: item.quantity,
-            price: item.product.price,
-            notes: item.notes
-          }))
+          items: cart.map(item => {
+            let finalNotes = item.notes || '';
+            if (item.product.sizeName) {
+              finalNotes = `[${item.product.sizeName}] ${finalNotes}`.trim();
+            }
+            return {
+              product_id: item.product.original_id || item.product.id,
+              quantity: item.quantity,
+              price: item.product.price,
+              notes: finalNotes
+            };
+          })
         })
       });
 
@@ -619,40 +625,58 @@ export default function Waiter() {
                     {category.name}
                   </h4>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {category.products && category.products.map(product => {
-                      const cartItem = cart.find(item => item.product.id === product.id);
-                      const quantity = cartItem ? cartItem.quantity : 0;
-                      
-                      return (
-                        <div key={product.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px' }}>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{product.name}</div>
-                            <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', marginTop: '4px' }}>
-                              R$ {product.price.toFixed(2).replace('.', ',')}
+                    {category.products && category.products.flatMap(product => {
+                      let parsedSizes = [];
+                      try {
+                        parsedSizes = product.sizes ? (typeof product.sizes === 'string' ? JSON.parse(product.sizes) : product.sizes) : [];
+                      } catch(e) {}
+
+                      const variants = parsedSizes.length > 0 
+                        ? parsedSizes.map((size, idx) => ({
+                            ...product,
+                            original_id: product.id,
+                            id: `${product.id}-size-${idx}`,
+                            name: `${product.name} - ${size.name}`,
+                            price: parseFloat(size.price),
+                            sizeName: size.name
+                          }))
+                        : [product];
+
+                      return variants.map(variant => {
+                        const cartItem = cart.find(item => item.product.id === variant.id);
+                        const quantity = cartItem ? cartItem.quantity : 0;
+                        
+                        return (
+                          <div key={variant.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px' }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{variant.name}</div>
+                              <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.9rem', marginTop: '4px' }}>
+                                R$ {variant.price.toFixed(2).replace('.', ',')}
+                              </div>
+                            </div>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <div style={{ display: quantity > 0 ? 'flex' : 'none', alignItems: 'center', gap: '12px' }}>
+                                  <button type="button" onClick={() => updateQuantity(variant.id, -1)} style={{ background: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '50%', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                                    <MinusCircle size={20} />
+                                  </button>
+                                  <span style={{ fontWeight: 'bold', minWidth: '24px', textAlign: 'center', fontSize: '1.1rem' }}>{quantity}</span>
+                                  <button type="button" onClick={() => updateQuantity(variant.id, 1)} style={{ background: 'var(--primary)', border: 'none', borderRadius: '50%', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                                    <PlusCircle size={20} />
+                                  </button>
+                              </div>
+                              <div style={{ display: quantity === 0 ? 'block' : 'none' }}>
+                                  <button 
+                                    onClick={() => addToCart(variant)}
+                                    style={{ background: 'var(--primary)', border: 'none', borderRadius: '8px', padding: '6px 16px', color: 'white', fontWeight: 'bold', fontSize: '0.85rem' }}
+                                  >
+                                    Adicionar
+                                  </button>
+                              </div>
                             </div>
                           </div>
-                          
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <div style={{ display: quantity > 0 ? 'flex' : 'none', alignItems: 'center', gap: '12px' }}>
-                                <button type="button" onClick={() => updateQuantity(product.id, -1)} style={{ background: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '50%', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                                  <MinusCircle size={20} />
-                                </button>
-                                <span style={{ fontWeight: 'bold', minWidth: '24px', textAlign: 'center', fontSize: '1.1rem' }}>{quantity}</span>
-                                <button type="button" onClick={() => updateQuantity(product.id, 1)} style={{ background: 'var(--primary)', border: 'none', borderRadius: '50%', width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                                  <PlusCircle size={20} />
-                                </button>
-                            </div>
-                            <div style={{ display: quantity === 0 ? 'block' : 'none' }}>
-                                <button 
-                                  onClick={() => addToCart(product)}
-                                  style={{ background: 'var(--primary)', border: 'none', borderRadius: '8px', padding: '6px 16px', color: 'white', fontWeight: 'bold', fontSize: '0.85rem' }}
-                                >
-                                  Adicionar
-                                </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
+                        );
+                      });
                     })}
                   </div>
                 </div>

@@ -9,8 +9,13 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
     if (initialData && initialData.additional_images) {
       addImgs = typeof initialData.additional_images === 'string' ? JSON.parse(initialData.additional_images) : initialData.additional_images;
     }
-    return initialData ? { ...initialData, additional_images: addImgs } : {
-      name: '', category_id: '', price: '', description: '', image_url: '', additional_images: [], card_message: 'Toque para ver detalhes', suggested_products_ids: [],
+    let parsedSizes = [];
+    try {
+      parsedSizes = initialData?.sizes ? (typeof initialData.sizes === 'string' ? JSON.parse(initialData.sizes) : initialData.sizes) : [];
+    } catch(e) {}
+
+    return initialData ? { ...initialData, additional_images: addImgs, sizes: parsedSizes } : {
+      name: '', category_id: '', price: '', description: '', image_url: '', additional_images: [], sizes: [], card_message: 'Toque para ver detalhes', suggested_products_ids: [],
       ncm: 'N/C', cfop: 'N/C', regime_tributario: 'Substituição Tributária'
     };
   });
@@ -21,6 +26,7 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
       setFormData({
         ...initialData,
         additional_images: initialData.additional_images && typeof initialData.additional_images === 'string' ? JSON.parse(initialData.additional_images) : [],
+        sizes: initialData.sizes && typeof initialData.sizes === 'string' ? JSON.parse(initialData.sizes) : (initialData.sizes || []),
         suggested_products_ids: initialData.suggestedProducts ? initialData.suggestedProducts.map(p => p.id) : []
       });
     } else if (!formData.category_id && categories && categories.length > 0) {
@@ -31,6 +37,29 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddSize = () => {
+    setFormData(prev => ({
+      ...prev,
+      sizes: [...(prev.sizes || []), { name: '', price: 0 }]
+    }));
+  };
+
+  const handleSizeChange = (index, field, value) => {
+    setFormData(prev => {
+      const newSizes = [...(prev.sizes || [])];
+      newSizes[index] = { ...newSizes[index], [field]: field === 'price' ? parseFloat(value) : value };
+      return { ...prev, sizes: newSizes };
+    });
+  };
+
+  const handleRemoveSize = (index) => {
+    setFormData(prev => {
+      const newSizes = [...(prev.sizes || [])];
+      newSizes.splice(index, 1);
+      return { ...prev, sizes: newSizes };
+    });
   };
 
   const handleImageUpload = async (e) => {
@@ -97,6 +126,41 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
         </div>
       </div>
       
+      <div style={{ padding: '16px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '8px', marginTop: '12px', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <label style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold' }}>Tamanhos / Porções / Variações (Opcional)</label>
+          <button type="button" onClick={handleAddSize} style={{ background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '6px', padding: '6px 12px', fontSize: '0.85rem', cursor: 'pointer' }}>+ Adicionar Variação</button>
+        </div>
+        
+        {(!formData.sizes || formData.sizes.length === 0) && (
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Se não houver variações, o preço principal do produto será usado.</span>
+        )}
+        
+        {formData.sizes && formData.sizes.map((size, index) => (
+          <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+            <input 
+              type="text" 
+              placeholder="Ex: Inteira (Serve 04 pessoas)" 
+              value={size.name} 
+              onChange={(e) => handleSizeChange(index, 'name', e.target.value)}
+              style={{ flex: 2, padding: '8px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white' }}
+              required
+            />
+            <input 
+              type="number" 
+              step="0.01" 
+              placeholder="Preço R$" 
+              value={size.price} 
+              onChange={(e) => handleSizeChange(index, 'price', e.target.value)}
+              style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white' }}
+              required
+            />
+            <button type="button" onClick={() => handleRemoveSize(index)} style={{ background: 'var(--danger)', color: 'white', border: 'none', borderRadius: '6px', padding: '8px 12px', cursor: 'pointer' }}>
+              X
+            </button>
+          </div>
+        ))}
+      </div>
 
       <div>
         <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Mensagem no Card (Página Inicial)</label>
@@ -288,6 +352,7 @@ export default function MenuManagement() {
           description: formData.description || '',
           image_url: formData.image_url || '',
           additional_images: formData.additional_images || [],
+          sizes: formData.sizes || [],
           card_message: formData.card_message || 'Toque para ver detalhes',
           suggested_products_ids: formData.suggested_products_ids || [],
           ncm: formData.ncm || 'N/C',
@@ -327,6 +392,7 @@ export default function MenuManagement() {
           description: formData.description || '',
           image_url: formData.image_url || '',
           additional_images: formData.additional_images || [],
+          sizes: formData.sizes || [],
           card_message: formData.card_message || 'Toque para ver detalhes',
           suggested_products_ids: formData.suggested_products_ids || [],
           ncm: formData.ncm || 'N/C',
