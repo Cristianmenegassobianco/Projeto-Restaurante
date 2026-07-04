@@ -181,8 +181,9 @@ export default function Kitchen() {
                       
                       // Extrair a variação [Tamanho] das observações se existir
                       const match = displayNotes.match(/^\[(.*?)\]\s*(.*)$/);
+                      let sizeVariation = null;
                       if (match) {
-                        displayName = `${displayName} - ${match[1]}`;
+                        sizeVariation = match[1];
                         displayNotes = match[2];
                       }
 
@@ -197,6 +198,7 @@ export default function Kitchen() {
                           )}
                           <div>
                             <div className="font-bold">{item.quantity}x {displayName}</div>
+                            {sizeVariation && <div style={{ color: '#C0AAB1', fontSize: '0.9rem', marginTop: '2px', fontStyle: 'italic', fontWeight: '500' }}>↳ {sizeVariation}</div>}
                             {displayNotes && <div style={{ color: 'var(--danger)', fontSize: '0.85rem', paddingLeft: '8px', borderLeft: '2px solid var(--danger)', marginTop: '4px' }}>Obs: {displayNotes}</div>}
                           </div>
                         </div>
