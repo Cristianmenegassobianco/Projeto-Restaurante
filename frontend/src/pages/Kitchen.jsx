@@ -147,7 +147,7 @@ export default function Kitchen() {
               <p>{activeTab === 'active' ? 'Nenhum pedido na fila de preparo no momento.' : 'Os pedidos marcados como "Finalizado" aparecerão aqui.'}</p>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '20px' }}>
               {displayOrders.map(order => (
                 <div 
                   key={order.id} 
