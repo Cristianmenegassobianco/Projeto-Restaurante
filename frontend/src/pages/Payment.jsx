@@ -774,8 +774,8 @@ export default function Payment() {
                                 {/* Mostrar informações fiscais para auditoria */}
                                 <div style={{ fontSize: '0.72rem', color: 'white', fontStyle: 'italic', display: 'flex', gap: '8px', marginTop: '2px' }}>
                                   <span>NCM: {item.product?.ncm || 'N/C'}</span>
-                                  <span>CFOP: {item.product?.cfop || 'N/C'}</span>
-                                  <span>Regime: {item.product?.regime_tributario || 'N/C'}</span>
+                                  <span>CFOP: {item.product?.tax_rule?.cfop || 'N/C'}</span>
+                                  <span>CSOSN: {item.product?.tax_rule?.csosn || 'N/C'}</span>
                                 </div>
                               </div>
                             ))}
@@ -1437,7 +1437,7 @@ export default function Payment() {
                         <span>{item.quantity}xR$ {item.unit_price.toFixed(2)} = R$ {(item.quantity * item.unit_price).toFixed(2)}</span>
                       </div>
                       <div style={{ color: '#666', fontSize: '0.7rem', paddingLeft: '4px' }}>
-                        NCM: {item.product?.ncm || '2202.10.00'} | CFOP: {item.product?.cfop || '5.102'} | REG: {item.product?.regime_tributario || 'ST'}
+                        NCM: {item.product?.ncm || 'N/C'} | CFOP: {item.product?.tax_rule?.cfop || 'N/C'} | CSOSN: {item.product?.tax_rule?.csosn || 'N/C'}
                       </div>
                     </div>
                   ))

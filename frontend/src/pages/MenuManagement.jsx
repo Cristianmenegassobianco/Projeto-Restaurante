@@ -3,7 +3,7 @@ import { Toaster, toast } from 'react-hot-toast';
 import { io } from 'socket.io-client';
 import { Check, ChefHat, PlusCircle, Trash2, Image, Star, Edit, X } from 'lucide-react';
 
-const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCancel, loading, submitLabel = 'Salvar Produto' }) => {
+const ProductForm = ({ initialData, categories, taxRules = [], allProducts = [], onSubmit, onCancel, loading, submitLabel = 'Salvar Produto' }) => {
   const [formData, setFormData] = useState(() => {
     let addImgs = [];
     if (initialData && initialData.additional_images) {
@@ -16,7 +16,7 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
 
     return initialData ? { ...initialData, additional_images: addImgs, sizes: parsedSizes } : {
       name: '', category_id: '', price: '', description: '', image_url: '', additional_images: [], sizes: [], card_message: 'Toque para ver detalhes', suggested_products_ids: [],
-      ncm: 'N/C', cfop: 'N/C', regime_tributario: 'Substituição Tributária'
+      ncm: 'N/C', tax_rule_id: ''
     };
   });
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -167,18 +167,19 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
         <input type="text" name="card_message" placeholder="Ex: Toque para ver detalhes" value={formData.card_message || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div>
           <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>NCM</label>
           <input type="text" name="ncm" placeholder="NCM" value={formData.ncm || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
         </div>
         <div>
-          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>CFOP</label>
-          <input type="text" name="cfop" placeholder="CFOP" value={formData.cfop || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Regime Tributário</label>
-          <input type="text" name="regime_tributario" placeholder="Regime" value={formData.regime_tributario || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Regra Fiscal / Categoria Fiscal</label>
+          <select name="tax_rule_id" value={formData.tax_rule_id || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none', height: '42px' }}>
+            <option value="">Selecione uma regra fiscal...</option>
+            {taxRules.map(rule => (
+              <option key={rule.id} value={rule.id}>{rule.name} (CFOP {rule.cfop})</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -224,6 +225,7 @@ const ProductForm = ({ initialData, categories, allProducts = [], onSubmit, onCa
 export default function MenuManagement() {
   const [menu, setMenu] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [taxRules, setTaxRules] = useState([]);
   const [activeTab, setActiveTab] = useState('products'); // 'products' | 'add' | 'banners' | 'featured'
 
   // Banner state
@@ -279,6 +281,14 @@ export default function MenuManagement() {
         setCategories(catData);
       } else {
         setCategories([]);
+      }
+
+      const taxRes = await fetch('/api/tax-rules');
+      const taxData = await taxRes.json();
+      if (Array.isArray(taxData)) {
+        setTaxRules(taxData);
+      } else {
+        setTaxRules([]);
       }
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
@@ -356,8 +366,7 @@ export default function MenuManagement() {
           card_message: formData.card_message || 'Toque para ver detalhes',
           suggested_products_ids: formData.suggested_products_ids || [],
           ncm: formData.ncm || 'N/C',
-          cfop: formData.cfop || 'N/C',
-          regime_tributario: formData.regime_tributario || 'Substituição Tributária'
+          tax_rule_id: formData.tax_rule_id || null
         })
       });
 
@@ -396,8 +405,7 @@ export default function MenuManagement() {
           card_message: formData.card_message || 'Toque para ver detalhes',
           suggested_products_ids: formData.suggested_products_ids || [],
           ncm: formData.ncm || 'N/C',
-          cfop: formData.cfop || 'N/C',
-          regime_tributario: formData.regime_tributario || 'Substituição Tributária'
+          tax_rule_id: formData.tax_rule_id || null
         })
       });
 
@@ -770,6 +778,7 @@ export default function MenuManagement() {
             <ProductForm 
               key={resetKey}
               categories={categories} 
+              taxRules={taxRules}
               allProducts={allProducts}
               onSubmit={handleAddProduct} 
               loading={formLoading} 
@@ -975,6 +984,7 @@ export default function MenuManagement() {
             <ProductForm 
               initialData={editingProduct} 
               categories={categories} 
+              taxRules={taxRules}
               allProducts={allProducts}
               onSubmit={handleUpdateProduct} 
               onCancel={() => setEditingProduct(null)}

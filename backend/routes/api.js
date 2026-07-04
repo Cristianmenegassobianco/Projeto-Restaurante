@@ -124,7 +124,7 @@ app.post('/api/orders', async (req, res) => {
       },
       include: {
         items: {
-          include: { product: true }
+          include: { product: { include: { tax_rule: true } } }
         },
         table_session: true
       }
@@ -148,7 +148,7 @@ app.get('/api/kitchen/orders', async (req, res) => {
         status: { in: ['pending', 'preparing', 'ready'] }
       },
       include: {
-        items: { include: { product: true } },
+        items: { include: { product: { include: { tax_rule: true } } } },
         table_session: true
       },
       orderBy: { created_at: 'asc' }
@@ -169,7 +169,7 @@ app.put('/api/orders/:id/status', async (req, res) => {
       where: { id },
       data: { status },
       include: {
-        items: { include: { product: true } },
+        items: { include: { product: { include: { tax_rule: true } } } },
         table_session: true
       }
     });
@@ -191,7 +191,7 @@ app.get('/api/waiter/orders', async (req, res) => {
         status: { notIn: ['paid', 'canceled'] }
       },
       include: {
-        items: { include: { product: true } },
+        items: { include: { product: { include: { tax_rule: true } } } },
         table_session: true
       },
       orderBy: { created_at: 'desc' },
@@ -212,6 +212,16 @@ app.get('/api/categories', async (req, res) => {
     res.json(categories);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+// Tax Rules: Get list
+app.get('/api/tax-rules', async (req, res) => {
+  try {
+    const taxRules = await prisma.taxRule.findMany();
+    res.json(taxRules);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch tax rules' });
   }
 });
 
@@ -378,7 +388,7 @@ app.get('/api/comandas/:number/orders', async (req, res) => {
         status: { notIn: ['paid', 'canceled'] }
       },
       include: {
-        items: { include: { product: true } },
+        items: { include: { product: { include: { tax_rule: true } } } },
         table_session: true
       },
       orderBy: { created_at: 'desc' }
@@ -412,7 +422,7 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
       },
       include: {
         items: {
-          include: { product: true }
+          include: { product: { include: { tax_rule: true } } }
         }
       }
     });
@@ -495,6 +505,61 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
 app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
   const { number } = req.params;
   try {
+    // 1. Fetch orders
+    const orders = await prisma.order.findMany({
+      where: {
+        comanda_number: number,
+        status: 'paid'
+      },
+      include: {
+        items: { include: { product: { include: { tax_rule: true } } } }
+      }
+    });
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ error: 'Nenhum pedido pago encontrado para esta comanda.' });
+    }
+
+    // 2. Aggregate items
+    const allItems = orders.flatMap(o => o.items);
+    let totalAmount = 0;
+    
+    const nfeItens = allItems.map((item, index) => {
+      totalAmount += item.quantity * item.unit_price;
+      
+      return {
+        numero_item: (index + 1).toString(),
+        codigo_produto: item.product.id.slice(0, 8), // Apenas um identificador curto
+        descricao: item.product.name,
+        quantidade_comercial: item.quantity.toString(),
+        valor_unitario_comercial: item.unit_price.toFixed(2),
+        cfop: item.product.tax_rule?.cfop || "5101",
+        codigo_ncm: item.product.ncm || "00000000",
+        icms_origem: item.product.tax_rule?.origem_mercadoria || "0",
+        icms_situacao_tributaria: item.product.tax_rule?.csosn || "102"
+      };
+    });
+
+    // Assume-se que o pagamento seja em dinheiro (01) ou cartão, ajustaremos conforme necessário
+    // Por padrão enviando 01 (Dinheiro) para exemplo, ou pegando do pedido se tivéssemos mapeado:
+    const paymentMethodCode = "01"; // 01=Dinheiro, 03=Cartão de Crédito, 04=Cartão de Débito, etc
+
+    const payloadNFe = {
+      natureza_operacao: "Venda ao Consumidor",
+      data_emissao: new Date().toISOString(),
+      itens: nfeItens,
+      pagamentos: [
+        {
+          forma_pagamento: paymentMethodCode,
+          valor_pagamento: totalAmount.toFixed(2)
+        }
+      ]
+    };
+
+    console.log("=== PAYLOAD NFC-e PRONTO PARA ENVIO ===");
+    console.log(JSON.stringify(payloadNFe, null, 2));
+    
+    // Mock NFe API response
     const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const randomPart = Math.floor(10000000000000 + Math.random() * 90000000000000).toString();
     const nfce_access_key = `3526${datePart}00019955001000${randomPart}1`;
@@ -510,7 +575,7 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
       }
     });
 
-    res.json({ success: true, nfce_access_key });
+    res.json({ success: true, nfce_access_key, payload_gerado: payloadNFe });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Falha ao emitir NFC-e.' });
