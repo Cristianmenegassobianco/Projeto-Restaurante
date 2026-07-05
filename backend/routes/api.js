@@ -237,6 +237,23 @@ app.post('/api/categories', async (req, res) => {
   }
 });
 
+// 10.1.5 Categories: Update category name
+app.put('/api/categories/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: 'Name is required' });
+  try {
+    const category = await prisma.category.update({
+      where: { id },
+      data: { name }
+    });
+    res.json(category);
+  } catch (error) {
+    console.error('Category update error:', error);
+    res.status(500).json({ error: 'Failed to update category' });
+  }
+});
+
 // 10.2 Categories: Delete category (cascading products and order items)
 app.delete('/api/categories/:id', async (req, res) => {
   const { id } = req.params;

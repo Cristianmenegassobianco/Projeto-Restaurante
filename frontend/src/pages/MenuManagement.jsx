@@ -341,6 +341,28 @@ export default function MenuManagement() {
     }
   };
 
+  const editCategory = async (category) => {
+    const newName = prompt('Digite o novo nome da categoria:', category.name);
+    if (!newName || newName.trim() === '' || newName === category.name) return;
+
+    try {
+      const res = await fetch(`/api/categories/${category.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName.trim() })
+      });
+      if (res.ok) {
+        toast.success('Categoria renomeada com sucesso!');
+        fetchMenuAndCategories();
+      } else {
+        toast.error('Erro ao renomear categoria.');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro de conexão ao renomear categoria.');
+    }
+  };
+
   const handleAddProduct = async (formData) => {
     if (!formData.name || !formData.category_id || !formData.price) {
       toast.error('Preencha todos os campos obrigatórios.');
@@ -643,27 +665,43 @@ export default function MenuManagement() {
             <div key={category.id} className="card" style={{ padding: '20px' }}>
               <h2 style={{ color: 'var(--text-main)', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>{category.name}</span>
-                <button
-                  onClick={() => deleteCategory(category.id)}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: 'var(--danger)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(244, 67, 54, 0.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                  title="Excluir Categoria"
-                >
-                  <Trash2 size={16} />
-                  <span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>Excluir Categoria</span>
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => editCategory(category)}
+                    style={{
+                      background: 'transparent', border: 'none', color: 'var(--text-main)', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', borderRadius: '4px',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    title="Editar Categoria"
+                  >
+                    <Edit size={16} />
+                    <span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>Editar</span>
+                  </button>
+                  <button
+                    onClick={() => deleteCategory(category.id)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: 'var(--danger)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(244, 67, 54, 0.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    title="Excluir Categoria"
+                  >
+                    <Trash2 size={16} />
+                    <span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>Excluir</span>
+                  </button>
+                </div>
               </h2>
               
               {category.products.length === 0 ? (
