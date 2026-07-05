@@ -5,7 +5,7 @@ export default function productsRoutes(prisma) {
 
   // Create new product
   router.post('/', async (req, res) => {
-    const { category_id, name, description, price, image_url, additional_images, sizes, ncm, tax_rule_id, suggested_products_ids, card_message } = req.body;
+    const { category_id, name, description, price, image_url, additional_images, sizes, ncm, cfop, csosn, origem_mercadoria, suggested_products_ids, card_message } = req.body;
     if (!category_id || !name || price === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -21,8 +21,9 @@ export default function productsRoutes(prisma) {
           additional_images: additional_images ? JSON.stringify(additional_images) : "[]",
           sizes: sizes ? JSON.stringify(sizes) : "[]",
           ncm: ncm || "N/C",
-          ncm: ncm || "N/C",
-          tax_rule_id: tax_rule_id || null,
+          cfop: cfop || "5102",
+          csosn: csosn || "102",
+          origem_mercadoria: origem_mercadoria || "0",
           card_message: card_message || "Toque para ver detalhes",
           suggestedProducts: suggested_products_ids && suggested_products_ids.length > 0 ? {
             connect: suggested_products_ids.map(id => ({ id }))
@@ -56,7 +57,7 @@ export default function productsRoutes(prisma) {
   // Update product details
   router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { category_id, name, description, price, image_url, additional_images, sizes, ncm, tax_rule_id, suggested_products_ids, card_message } = req.body;
+    const { category_id, name, description, price, image_url, additional_images, sizes, ncm, cfop, csosn, origem_mercadoria, suggested_products_ids, card_message } = req.body;
     
     if (!category_id || !name || price === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -74,8 +75,9 @@ export default function productsRoutes(prisma) {
           additional_images: additional_images ? JSON.stringify(additional_images) : "[]",
           sizes: sizes ? JSON.stringify(sizes) : "[]",
           ncm: ncm || "N/C",
-          ncm: ncm || "N/C",
-          tax_rule_id: tax_rule_id || null,
+          cfop: cfop || "5102",
+          csosn: csosn || "102",
+          origem_mercadoria: origem_mercadoria || "0",
           card_message: card_message || "Toque para ver detalhes",
           suggestedProducts: suggested_products_ids ? {
             set: suggested_products_ids.map(sid => ({ id: sid }))

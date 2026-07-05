@@ -215,15 +215,7 @@ app.get('/api/categories', async (req, res) => {
   }
 });
 
-// Tax Rules: Get list
-app.get('/api/tax-rules', async (req, res) => {
-  try {
-    const taxRules = await prisma.taxRule.findMany();
-    res.json(taxRules);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch tax rules' });
-  }
-});
+
 
 // 10.1 Categories: Create new
 app.post('/api/categories', async (req, res) => {

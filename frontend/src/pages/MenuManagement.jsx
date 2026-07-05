@@ -16,7 +16,7 @@ const ProductForm = ({ initialData, categories, taxRules = [], allProducts = [],
 
     return initialData ? { ...initialData, additional_images: addImgs, sizes: parsedSizes } : {
       name: '', category_id: '', price: '', description: '', image_url: '', additional_images: [], sizes: [], card_message: 'Toque para ver detalhes', suggested_products_ids: [],
-      ncm: 'N/C', tax_rule_id: ''
+      ncm: 'N/C', cfop: '5102', csosn: '102', origem_mercadoria: '0'
     };
   });
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -167,19 +167,22 @@ const ProductForm = ({ initialData, categories, taxRules = [], allProducts = [],
         <input type="text" name="card_message" placeholder="Ex: Toque para ver detalhes" value={formData.card_message || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px' }}>
         <div>
           <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>NCM</label>
           <input type="text" name="ncm" placeholder="NCM" value={formData.ncm || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
         </div>
         <div>
-          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Regra Fiscal / Categoria Fiscal</label>
-          <select name="tax_rule_id" value={formData.tax_rule_id || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none', height: '42px' }}>
-            <option value="">Selecione uma regra fiscal...</option>
-            {taxRules.map(rule => (
-              <option key={rule.id} value={rule.id}>{rule.name} (CFOP {rule.cfop})</option>
-            ))}
-          </select>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>CFOP</label>
+          <input type="text" name="cfop" placeholder="CFOP" value={formData.cfop || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>CSOSN</label>
+          <input type="text" name="csosn" placeholder="CSOSN" value={formData.csosn || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '6px', fontSize: '0.9rem', color: 'var(--text-main)' }}>Origem</label>
+          <input type="text" name="origem_mercadoria" placeholder="0" value={formData.origem_mercadoria || ''} onChange={handleChange} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-dark)', color: 'white', outline: 'none' }} />
         </div>
       </div>
 
@@ -283,13 +286,7 @@ export default function MenuManagement() {
         setCategories([]);
       }
 
-      const taxRes = await fetch('/api/tax-rules');
-      const taxData = await taxRes.json();
-      if (Array.isArray(taxData)) {
-        setTaxRules(taxData);
-      } else {
-        setTaxRules([]);
-      }
+
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
     }
@@ -366,7 +363,9 @@ export default function MenuManagement() {
           card_message: formData.card_message || 'Toque para ver detalhes',
           suggested_products_ids: formData.suggested_products_ids || [],
           ncm: formData.ncm || 'N/C',
-          tax_rule_id: formData.tax_rule_id || null
+          cfop: formData.cfop || '5102',
+          csosn: formData.csosn || '102',
+          origem_mercadoria: formData.origem_mercadoria || '0'
         })
       });
 
@@ -405,7 +404,9 @@ export default function MenuManagement() {
           card_message: formData.card_message || 'Toque para ver detalhes',
           suggested_products_ids: formData.suggested_products_ids || [],
           ncm: formData.ncm || 'N/C',
-          tax_rule_id: formData.tax_rule_id || null
+          cfop: formData.cfop || '5102',
+          csosn: formData.csosn || '102',
+          origem_mercadoria: formData.origem_mercadoria || '0'
         })
       });
 

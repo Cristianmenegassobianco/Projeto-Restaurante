@@ -24,14 +24,7 @@ model Category {
   products   Product[]
 }
 
-model TaxRule {
-  id                String    @id @default(uuid())
-  name              String
-  cfop              String
-  csosn             String
-  origem_mercadoria String    @default("0")
-  products          Product[]
-}
+
 
 model Product {
   id                String      @id @default(uuid())
@@ -46,8 +39,9 @@ model Product {
   is_available      Boolean     @default(true)
   is_featured       Boolean     @default(false)
   ncm               String      @default("N/C")
-  tax_rule_id       String?
-  tax_rule          TaxRule?    @relation(fields: [tax_rule_id], references: [id])
+  cfop              String      @default("5102")
+  csosn             String      @default("102")
+  origem_mercadoria String      @default("0")
   order_items       OrderItem[]
   category          Category    @relation(fields: [category_id], references: [id])
   suggestedProducts Product[]   @relation("ProductSuggestions")
