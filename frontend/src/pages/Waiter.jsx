@@ -293,14 +293,7 @@ export default function Waiter() {
         throw new Error('Falha ao iniciar sessão da mesa');
       }
 
-      let utensils = [];
-      if (platesCount > 0) utensils.push(`${platesCount} Prato(s)`);
-      if (wineGlassesCount > 0) utensils.push(`${wineGlassesCount} Taça(s)`);
-      if (glassesNormalCount > 0) utensils.push(`${glassesNormalCount} Copo(s)`);
-      if (glassesIceCount > 0) utensils.push(`${glassesIceCount} Copo(s) c/ Gelo`);
-      if (glassesIceLemonCount > 0) utensils.push(`${glassesIceLemonCount} Copo(s) c/ Gelo e Limão`);
-      
-      const utensilsString = utensils.length > 0 ? ` — Utensílios: ${utensils.join(', ')}` : '';
+      const utensilsString = '';
 
       // 2. Send Order
       const orderRes = await fetch('/api/orders', {
@@ -350,11 +343,7 @@ export default function Waiter() {
         setCart([]);
         setTableNumber('');
         setComandaNumber('');
-        setPlatesCount(0);
-        setWineGlassesCount(0);
-        setGlassesNormalCount(0);
-        setGlassesIceCount(0);
-        setGlassesIceLemonCount(0);
+
         setShowCartModal(false);
       } else {
         const errorData = await orderRes.json().catch(() => ({}));
@@ -733,55 +722,7 @@ export default function Waiter() {
               <strong>Mesa:</strong> {tableNumber || 'Não informada'}
             </div>
 
-            <h3 style={{ marginBottom: '16px', fontSize: '1rem' }}>Utensílios para a Mesa</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                <span style={{ fontWeight: '500', color: 'white' }}>Pratos</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <button type="button" onClick={() => setPlatesCount(Math.max(0, platesCount - 1))} style={{ background: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><MinusCircle size={16} style={{margin: 'auto'}}/></button>
-                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem', minWidth: '24px', textAlign: 'center' }}>{platesCount}</span>
-                  <button type="button" onClick={() => setPlatesCount(platesCount + 1)} style={{ background: 'var(--primary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><PlusCircle size={16} style={{margin: 'auto'}}/></button>
-                </div>
-              </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                <span style={{ fontWeight: '500', color: 'white' }}>Taças</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <button type="button" onClick={() => setWineGlassesCount(Math.max(0, wineGlassesCount - 1))} style={{ background: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><MinusCircle size={16} style={{margin: 'auto'}}/></button>
-                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem', minWidth: '24px', textAlign: 'center' }}>{wineGlassesCount}</span>
-                  <button type="button" onClick={() => setWineGlassesCount(wineGlassesCount + 1)} style={{ background: 'var(--primary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><PlusCircle size={16} style={{margin: 'auto'}}/></button>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                <span style={{ fontWeight: '500', color: 'white' }}>Copos</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <button type="button" onClick={() => setGlassesNormalCount(Math.max(0, glassesNormalCount - 1))} style={{ background: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><MinusCircle size={16} style={{margin: 'auto'}}/></button>
-                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem', minWidth: '24px', textAlign: 'center' }}>{glassesNormalCount}</span>
-                  <button type="button" onClick={() => setGlassesNormalCount(glassesNormalCount + 1)} style={{ background: 'var(--primary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><PlusCircle size={16} style={{margin: 'auto'}}/></button>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                <span style={{ fontWeight: '500', color: 'white' }}>Copos com Gelo</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <button type="button" onClick={() => setGlassesIceCount(Math.max(0, glassesIceCount - 1))} style={{ background: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><MinusCircle size={16} style={{margin: 'auto'}}/></button>
-                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem', minWidth: '24px', textAlign: 'center' }}>{glassesIceCount}</span>
-                  <button type="button" onClick={() => setGlassesIceCount(glassesIceCount + 1)} style={{ background: 'var(--primary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><PlusCircle size={16} style={{margin: 'auto'}}/></button>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                <span style={{ fontWeight: '500', color: 'white' }}>Copos com Gelo e Limão</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <button type="button" onClick={() => setGlassesIceLemonCount(Math.max(0, glassesIceLemonCount - 1))} style={{ background: 'var(--bg-dark)', border: '1px solid var(--border)', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><MinusCircle size={16} style={{margin: 'auto'}}/></button>
-                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem', minWidth: '24px', textAlign: 'center' }}>{glassesIceLemonCount}</span>
-                  <button type="button" onClick={() => setGlassesIceLemonCount(glassesIceLemonCount + 1)} style={{ background: 'var(--primary)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', color: 'white', display: 'flex' }}><PlusCircle size={16} style={{margin: 'auto'}}/></button>
-                </div>
-              </div>
-
-            </div>
 
             <h3 style={{ marginBottom: '16px', fontSize: '1rem' }}>Itens Selecionados</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
