@@ -164,10 +164,14 @@ export default function Home() {
             </div>
             
             <div style={{ display: 'flex', overflowX: 'auto', gap: '20px', paddingBottom: '20px', scrollbarWidth: 'none', scrollBehavior: 'smooth' }}>
-              {weeklyHighlights.map(product => (
+              {weeklyHighlights.map(product => {
+                const catInfo = categories.find(c => c.id === product.category_id);
+                const isWine = catInfo?.name.toLowerCase().includes('vinho');
+                const objFit = isWine ? 'contain' : 'cover';
+                return (
                 <div key={product.id} onClick={() => navigate(`/product/${product.id}`, { state: { product } })} style={{ flex: '0 0 260px', background: '#212322', border: '1px solid #3D312A', padding: '15px', cursor: 'pointer', transition: 'transform 0.3s', boxShadow: '3px 3px 10px rgba(0,0,0,0.3)' }}>
                   <div style={{ position: 'relative' }}>
-                    <img src={product.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'} alt={product.name} loading="lazy" style={{ width: '100%', height: '160px', objectFit: 'cover', border: '2px solid #3D312A', filter: 'sepia(10%)' }} />
+                    <img src={product.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'} alt={product.name} loading="lazy" style={{ width: '100%', height: '160px', objectFit: objFit, border: '2px solid #3D312A', filter: 'sepia(10%)' }} />
                     <span style={{ position: 'absolute', top: '10px', right: '10px', background: '#511F26', color: '#F2EEDF', padding: '4px 8px', fontSize: '0.7rem', fontFamily: '"Outfit", sans-serif', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #C0AAB1' }}>
                       <Star size={12} fill="#F2EEDF" /> Destaque
                     </span>
@@ -176,7 +180,7 @@ export default function Home() {
                   <p style={{ fontSize: '0.9rem', color: '#B5B4A2', fontStyle: 'italic', marginBottom: '15px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{product.card_message || 'Toque para ver detalhes'}</p>
                   <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#C0AAB1', fontFamily: '"Outfit", sans-serif' }}>R$ {product.price.toFixed(2).replace('.', ',')}</span>
                 </div>
-              ))}
+              )})}
             </div>
           </div>
         )}
@@ -211,7 +215,10 @@ export default function Home() {
                 </div>
                 
                 <div className="product-grid">
-                  {cat.products.map(product => (
+                  {cat.products.map(product => {
+                    const isWine = cat.name.toLowerCase().includes('vinho');
+                    const objFit = isWine ? 'contain' : 'cover';
+                    return (
                     <div key={product.id} onClick={() => navigate(`/product/${product.id}`, { state: { product } })} className="rustic-card" style={{ background: '#212322', border: '1px solid #511F26', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', transition: 'transform 0.3s', position: 'relative', boxShadow: '5px 5px 15px rgba(0,0,0,0.3)' }}>
                       {/* Elementos decorativos nos cantos */}
                       <div style={{ position: 'absolute', top: '5px', left: '5px', width: '10px', height: '10px', borderTop: '1px solid #C0AAB1', borderLeft: '1px solid #C0AAB1' }}></div>
@@ -219,7 +226,7 @@ export default function Home() {
                       <div style={{ position: 'absolute', bottom: '5px', left: '5px', width: '10px', height: '10px', borderBottom: '1px solid #C0AAB1', borderLeft: '1px solid #C0AAB1' }}></div>
                       <div style={{ position: 'absolute', bottom: '5px', right: '5px', width: '10px', height: '10px', borderBottom: '1px solid #C0AAB1', borderRight: '1px solid #C0AAB1' }}></div>
 
-                      {product.image_url && <img src={product.image_url} alt={product.name} loading="lazy" style={{ width: '100%', objectFit: 'cover', marginBottom: '20px', border: '3px solid #3D312A', filter: 'sepia(20%)' }} />}
+                      {product.image_url && <img src={product.image_url} alt={product.name} loading="lazy" style={{ width: '100%', objectFit: objFit, marginBottom: '20px', border: '3px solid #3D312A', filter: 'sepia(20%)' }} />}
                       
                       <h4 style={{ color: '#D0BAAA', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>{product.name}</h4>
                       <p style={{ fontSize: '1rem', color: '#B5B4A2', fontStyle: 'italic', marginBottom: '20px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: '1.6' }}>{product.card_message || 'Toque para ver detalhes'}</p>
@@ -228,7 +235,7 @@ export default function Home() {
                         <span style={{ fontSize: '1.3rem', fontWeight: 'bold', color: '#C0AAB1', fontFamily: '"Outfit", sans-serif' }}>R$ {product.price.toFixed(2).replace('.', ',')}</span>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
             ))
