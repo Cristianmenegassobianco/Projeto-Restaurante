@@ -125,7 +125,7 @@ app.post('/api/orders', async (req, res) => {
       },
       include: {
         items: {
-          include: { product: { include: { tax_rule: true } } }
+          include: { product: true }
         },
         table_session: true
       }
@@ -149,7 +149,7 @@ app.get('/api/kitchen/orders', async (req, res) => {
         status: { in: ['pending', 'preparing', 'ready'] }
       },
       include: {
-        items: { include: { product: { include: { tax_rule: true } } } },
+        items: { include: { product: true } },
         table_session: true
       },
       orderBy: { created_at: 'asc' }
@@ -170,7 +170,7 @@ app.put('/api/orders/:id/status', async (req, res) => {
       where: { id },
       data: { status },
       include: {
-        items: { include: { product: { include: { tax_rule: true } } } },
+        items: { include: { product: true } },
         table_session: true
       }
     });
@@ -192,7 +192,7 @@ app.get('/api/waiter/orders', async (req, res) => {
         status: { notIn: ['paid', 'canceled'] }
       },
       include: {
-        items: { include: { product: { include: { tax_rule: true } } } },
+        items: { include: { product: true } },
         table_session: true
       },
       orderBy: { created_at: 'desc' },
@@ -398,7 +398,7 @@ app.get('/api/comandas/:number/orders', async (req, res) => {
         status: { notIn: ['paid', 'canceled'] }
       },
       include: {
-        items: { include: { product: { include: { tax_rule: true } } } },
+        items: { include: { product: true } },
         table_session: true
       },
       orderBy: { created_at: 'desc' }
@@ -432,7 +432,7 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
       },
       include: {
         items: {
-          include: { product: { include: { tax_rule: true } } }
+          include: { product: true }
         }
       }
     });
@@ -522,7 +522,7 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
         status: 'paid'
       },
       include: {
-        items: { include: { product: { include: { tax_rule: true } } } }
+        items: { include: { product: true } }
       }
     });
 
@@ -543,10 +543,10 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
         descricao: item.product.name,
         quantidade_comercial: item.quantity.toString(),
         valor_unitario_comercial: item.unit_price.toFixed(2),
-        cfop: item.product.tax_rule?.cfop || "5101",
+        cfop: item.product.cfop || "5101",
         codigo_ncm: item.product.ncm || "00000000",
-        icms_origem: item.product.tax_rule?.origem_mercadoria || "0",
-        icms_situacao_tributaria: item.product.tax_rule?.csosn || "102"
+        icms_origem: item.product.origem_mercadoria || "0",
+        icms_situacao_tributaria: item.product.csosn || "102"
       };
     });
 
