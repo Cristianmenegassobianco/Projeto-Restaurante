@@ -404,7 +404,8 @@ export default function Payment() {
         }));
         setShowFiscalReceipt(true);
       } else {
-        alert('Erro ao emitir NFC-e.');
+        const errData = await res.json().catch(() => ({}));
+        alert(`Erro ao emitir NFC-e: ${errData.error || 'Verifique o console do backend.'}`);
       }
     } catch (err) {
       console.error(err);
