@@ -318,6 +318,8 @@ export default function Payment() {
           paymentMethod: method,
           nfce_emitted: paymentData.nfce_emitted,
           nfce_access_key: paymentData.nfce_access_key,
+          caminho_danfe: paymentData.caminho_danfe,
+          status_nfe: paymentData.status_nfe,
           date: new Date().toLocaleString()
         });
         setPaymentSuccess(true);
@@ -396,7 +398,9 @@ export default function Payment() {
         setLastPaymentInfo(prev => ({
           ...prev,
           nfce_emitted: true,
-          nfce_access_key: data.nfce_access_key
+          nfce_access_key: data.nfce_access_key,
+          caminho_danfe: data.caminho_danfe,
+          status_nfe: data.status_nfe
         }));
         setShowFiscalReceipt(true);
       } else {
@@ -1501,10 +1505,17 @@ export default function Payment() {
                 className="btn btn-primary"
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                 onClick={() => {
-                  window.print();
+                  if (lastPaymentInfo.caminho_danfe) {
+                    const url = lastPaymentInfo.caminho_danfe.startsWith('http') 
+                      ? lastPaymentInfo.caminho_danfe 
+                      : `https://api.focusnfe.com.br${lastPaymentInfo.caminho_danfe}`;
+                    window.open(url, '_blank');
+                  } else {
+                    window.print();
+                  }
                 }}
               >
-                <Printer size={18} /> Imprimir Cupom
+                <Printer size={18} /> {lastPaymentInfo.caminho_danfe ? 'Baixar / Ver PDF' : 'Imprimir Cupom'}
               </button>
             </div>
 

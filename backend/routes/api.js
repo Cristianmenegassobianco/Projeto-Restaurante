@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
+import { emitirNFCe } from '../services/focusNfeService.js';
 
 export default function apiRoutes(prisma, io, jwt, JWT_SECRET) {
   const app = Router();
@@ -568,10 +569,16 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
     console.log("=== PAYLOAD NFC-e PRONTO PARA ENVIO ===");
     console.log(JSON.stringify(payloadNFe, null, 2));
     
-    // Mock NFe API response
-    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const randomPart = Math.floor(10000000000000 + Math.random() * 90000000000000).toString();
-    const nfce_access_key = `3526${datePart}00019955001000${randomPart}1`;
+    const referencia = `comanda-${number}-${Date.now()}`;
+    let focusResponse;
+    try {
+      focusResponse = await emitirNFCe(referencia, payloadNFe);
+    } catch (apiError) {
+      console.error("Focus API Error:", apiError);
+      return res.status(400).json({ error: apiError.message });
+    }
+    
+    const nfce_access_key = focusResponse.chave_nfe || focusResponse.referencia || referencia;
 
     await prisma.order.updateMany({
       where: {
@@ -584,7 +591,14 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
       }
     });
 
-    res.json({ success: true, nfce_access_key, payload_gerado: payloadNFe });
+    res.json({ 
+      success: true, 
+      nfce_access_key, 
+      status_nfe: focusResponse.status,
+      caminho_danfe: focusResponse.caminho_danfe || null,
+      payload_gerado: payloadNFe,
+      focus_response: focusResponse
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Falha ao emitir NFC-e.' });
