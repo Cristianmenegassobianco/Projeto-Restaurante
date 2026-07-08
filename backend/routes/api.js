@@ -543,6 +543,10 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
         descricao: item.product.name,
         quantidade_comercial: item.quantity.toString(),
         valor_unitario_comercial: item.unit_price.toFixed(2),
+        unidade_comercial: "UN",
+        quantidade_tributavel: item.quantity.toString(),
+        valor_unitario_tributavel: item.unit_price.toFixed(2),
+        unidade_tributavel: "UN",
         cfop: item.product.cfop || "5101",
         codigo_ncm: item.product.ncm || "00000000",
         icms_origem: item.product.origem_mercadoria || "0",
@@ -563,6 +567,7 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
       cnpj_emitente: cleanCnpj,
       natureza_operacao: "Venda ao Consumidor",
       data_emissao: new Date().toISOString(),
+      modalidade_frete: "9", // 9 = Sem Ocorrência de Transporte (obrigatório para NFC-e)
       itens: nfeItens,
       pagamentos: [
         {
