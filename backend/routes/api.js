@@ -554,8 +554,13 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
     // Por padrão enviando 01 (Dinheiro) para exemplo, ou pegando do pedido se tivéssemos mapeado:
     const paymentMethodCode = "01"; // 01=Dinheiro, 03=Cartão de Crédito, 04=Cartão de Débito, etc
 
+    if (!process.env.FOCUS_NFE_CNPJ) {
+      return res.status(400).json({ error: "Variável FOCUS_NFE_CNPJ não foi encontrada no ambiente (Railway ou .env)." });
+    }
+    const cleanCnpj = process.env.FOCUS_NFE_CNPJ.replace(/\D/g, '');
+
     const payloadNFe = {
-      cnpj_emitente: process.env.FOCUS_NFE_CNPJ || "",
+      cnpj_emitente: cleanCnpj,
       natureza_operacao: "Venda ao Consumidor",
       data_emissao: new Date().toISOString(),
       itens: nfeItens,
@@ -570,10 +575,6 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
     console.log("=== PAYLOAD NFC-e PRONTO PARA ENVIO ===");
     console.log(JSON.stringify(payloadNFe, null, 2));
     
-    if (!process.env.FOCUS_NFE_CNPJ) {
-      return res.status(400).json({ error: "Variável FOCUS_NFE_CNPJ não foi encontrada no ambiente (Railway ou .env)." });
-    }
-
     const referencia = `comanda-${number}-${Date.now()}`;
     let focusResponse;
     try {
