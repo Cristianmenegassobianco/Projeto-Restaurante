@@ -1,4 +1,10 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '.env') });
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
@@ -10,13 +16,8 @@ import productsRoutes from './routes/products.js';
 import cashRoutes from './routes/cash.js';
 import reportsRoutes from './routes/reports.js';
 import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { initCronJobs } from './cronJobs.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
