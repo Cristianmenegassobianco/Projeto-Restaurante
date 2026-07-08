@@ -532,9 +532,22 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
 
     // 2. Aggregate items
     const allItems = orders.flatMap(o => o.items);
+    
+    // Agrupa itens iguais (mesmo produto) para não gerar várias linhas do mesmo produto na NFC-e
+    const groupedItemsMap = {};
+    for (const item of allItems) {
+      const pid = item.product.id;
+      if (!groupedItemsMap[pid]) {
+        groupedItemsMap[pid] = { ...item };
+      } else {
+        groupedItemsMap[pid].quantity += item.quantity;
+      }
+    }
+    const mergedItems = Object.values(groupedItemsMap);
+
     let totalAmount = 0;
     
-    const nfeItens = allItems.map((item, index) => {
+    const nfeItens = mergedItems.map((item, index) => {
       totalAmount += item.quantity * item.unit_price;
       
       return {
