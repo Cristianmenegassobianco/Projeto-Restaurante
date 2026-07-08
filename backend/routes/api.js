@@ -570,6 +570,10 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
     console.log("=== PAYLOAD NFC-e PRONTO PARA ENVIO ===");
     console.log(JSON.stringify(payloadNFe, null, 2));
     
+    if (!process.env.FOCUS_NFE_CNPJ) {
+      return res.status(400).json({ error: "Variável FOCUS_NFE_CNPJ não foi encontrada no ambiente (Railway ou .env)." });
+    }
+
     const referencia = `comanda-${number}-${Date.now()}`;
     let focusResponse;
     try {
