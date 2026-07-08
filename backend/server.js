@@ -1,5 +1,6 @@
-
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -12,6 +13,8 @@ import reportsRoutes from './routes/reports.js';
 import multer from 'multer';
 import fs from 'fs';
 import { initCronJobs } from './cronJobs.js';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
