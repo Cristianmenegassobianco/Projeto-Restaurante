@@ -555,6 +555,7 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
     const paymentMethodCode = "01"; // 01=Dinheiro, 03=Cartão de Crédito, 04=Cartão de Débito, etc
 
     const payloadNFe = {
+      cnpj_emitente: process.env.FOCUS_NFE_CNPJ || "",
       natureza_operacao: "Venda ao Consumidor",
       data_emissao: new Date().toISOString(),
       itens: nfeItens,
