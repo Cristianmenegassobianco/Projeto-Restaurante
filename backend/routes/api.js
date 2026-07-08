@@ -567,6 +567,7 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
       cnpj_emitente: cleanCnpj,
       natureza_operacao: "Venda ao Consumidor",
       data_emissao: new Date().toISOString(),
+      presenca_comprador: "1", // 1 = Operação presencial (Obrigatório para NFC-e)
       modalidade_frete: "9", // 9 = Sem Ocorrência de Transporte (obrigatório para NFC-e)
       itens: nfeItens,
       pagamentos: [
