@@ -8,7 +8,8 @@ const TOKEN_PATH = path.join(__dirname, '../bling_tokens.json');
 
 const BLING_CLIENT_ID = process.env.BLING_CLIENT_ID;
 const BLING_CLIENT_SECRET = process.env.BLING_CLIENT_SECRET;
-const BLING_API_URL = 'https://www.bling.com.br/Api/v3';
+const BLING_OAUTH_URL = 'https://www.bling.com.br/Api/v3';
+const BLING_API_URL = 'https://api.bling.com.br/Api/v3';
 
 // Carrega os tokens do arquivo JSON local (para persistência simples)
 export const getBlingTokens = () => {
@@ -26,7 +27,7 @@ export const saveBlingTokens = (tokens) => {
 export const authenticateBling = async (code) => {
   const basicAuth = Buffer.from(`${BLING_CLIENT_ID}:${BLING_CLIENT_SECRET}`).toString('base64');
   
-  const response = await fetch(`${BLING_API_URL}/oauth/token`, {
+  const response = await fetch(`${BLING_OAUTH_URL}/oauth/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -58,7 +59,7 @@ export const refreshTokenBling = async () => {
 
   const basicAuth = Buffer.from(`${BLING_CLIENT_ID}:${BLING_CLIENT_SECRET}`).toString('base64');
 
-  const response = await fetch(`${BLING_API_URL}/oauth/token`, {
+  const response = await fetch(`${BLING_OAUTH_URL}/oauth/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
