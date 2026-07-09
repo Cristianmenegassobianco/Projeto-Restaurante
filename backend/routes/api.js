@@ -580,14 +580,19 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
     if (payment_method === 'credito' || payment_method === 'credit') formaPagamentoBling = 3;
     if (payment_method === 'pix') formaPagamentoBling = 4;
 
+    const today = new Date().toISOString().split('T')[0];
+    
     const payloadBling = {
-      tipo: 2, // 2 = Saída
+      data: today,
+      dataPrevista: today,
+      dataSaida: today,
       contato: {
         nome: "Consumidor Final"
       },
       itens: nfeItens,
       parcelas: [
         {
+          dataVencimento: today,
           formaPagamento: {
             id: formaPagamentoBling
           },

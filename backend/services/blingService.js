@@ -113,19 +113,33 @@ export const fetchBlingApi = async (endpoint, options = {}) => {
 
 // Emitir NFC-e via Pedido de Venda -> Gerar Nota
 export const emitirNFCeBling = async (payload) => {
-  // 1. Criar NFC-e no Bling
-  // A API V3 possui a rota POST /nfce
-  const response = await fetchBlingApi('/nfce', {
+  // 1. Criar o Pedido de Venda no Bling
+  const responseVenda = await fetchBlingApi('/pedidos/vendas', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
 
-  if (!response.ok) {
-    const errorData = await response.text();
-    throw new Error(`Erro na API Bling ao criar NFC-e: ${errorData}`);
+  if (!responseVenda.ok) {
+    const errorData = await responseVenda.text();
+    throw new Error(`Erro ao criar Pedido de Venda no Bling: ${errorData}`);
   }
 
-  const data = await response.json();
-  return data.data; // Retorna os dados da nota criada (id, numero, linkDanfe, etc.)
+  const vendaData = await responseVenda.json();
+  const idVenda = vendaData.data.id;
+
+  // 2. Gerar a NFC-e a partir do Pedido
+  const responseNfce = await fetchBlingApi(`/pedidos/vendas/${idVenda}/gerar-nfce`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({})
+  });
+
+  if (!responseNfce.ok) {
+    const errorData = await responseNfce.text();
+    throw new Error(`Erro ao gerar NFC-e do Pedido ${idVenda}: ${errorData}`);
+  }
+
+  const nfceData = await responseNfce.json();
+  return nfceData.data;
 };
