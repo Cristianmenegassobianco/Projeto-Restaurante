@@ -587,6 +587,7 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
       dataPrevista: today,
       dataSaida: today,
       contato: {
+        id: 18252857321,
         nome: "Consumidor Final"
       },
       itens: nfeItens,
