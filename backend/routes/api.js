@@ -456,13 +456,19 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
 
     const totalAmount = ordersToPay.reduce((acc, order) => acc + order.total_amount, 0);
 
-    // 3. Simulate NFC-e emission if requested
+    // 3. Emit NFC-e if requested
     let nfce_access_key = null;
+    let caminho_danfe = null;
     if (create_nfce) {
-      // Generate a mock NFC-e Access Key (44 digits)
-      const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      const randomPart = Math.floor(10000000000000 + Math.random() * 90000000000000).toString();
-      nfce_access_key = `3526${datePart}00019955001000${randomPart}1`;
+      try {
+        const blingResult = await processBlingNfce(ordersToPay, payment_method);
+        nfce_access_key = blingResult.nfce_access_key;
+        caminho_danfe = blingResult.linkDanfe;
+      } catch (err) {
+        console.error("Failed to emit NFC-e during payment:", err);
+        // We do not block the payment if NFC-e fails, we just don't set nfce_emitted
+        create_nfce = false;
+      }
     }
 
     // 4. Update the orders in database
@@ -516,7 +522,8 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
       total_amount: totalAmount,
       payment_method,
       nfce_emitted: create_nfce,
-      nfce_access_key
+      nfce_access_key,
+      caminho_danfe
     });
   } catch (error) {
     console.error(error);
@@ -524,11 +531,72 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
   }
 });
 
+async function processBlingNfce(orders, payment_method) {
+  // Aggregate items
+  const allItems = orders.flatMap(o => o.items);
+  const groupedItemsMap = {};
+  for (const item of allItems) {
+    const pid = item.product.id;
+    if (!groupedItemsMap[pid]) {
+      groupedItemsMap[pid] = { ...item };
+    } else {
+      groupedItemsMap[pid].quantity += item.quantity;
+    }
+  }
+  const mergedItems = Object.values(groupedItemsMap);
+
+  let totalAmount = 0;
+  const nfeItens = mergedItems.map((item) => {
+    totalAmount += item.quantity * item.unit_price;
+    return {
+      codigo: item.product.id.slice(0, 8),
+      descricao: item.product.name,
+      quantidade: item.quantity,
+      valor: item.unit_price
+    };
+  });
+
+  let formaPagamentoBling = 10490350; // Dinheiro default
+  if (payment_method === 'pix') formaPagamentoBling = 10490356;
+
+  const today = new Date().toISOString().split('T')[0];
+  
+  const payloadBling = {
+    data: today,
+    dataPrevista: today,
+    dataSaida: today,
+    contato: {
+      id: 18252857321,
+      nome: "Consumidor Final"
+    },
+    itens: nfeItens,
+    parcelas: [
+      {
+        dataVencimento: today,
+        formaPagamento: {
+          id: formaPagamentoBling
+        },
+        valor: totalAmount
+      }
+    ]
+  };
+
+  console.log("=== PAYLOAD BLING NFC-e PRONTO PARA ENVIO ===");
+  console.log(JSON.stringify(payloadBling, null, 2));
+  
+  const blingResponse = await emitirNFCeBling(payloadBling);
+  return {
+    nfce_access_key: blingResponse.numero || `bling-${Date.now()}`,
+    linkDanfe: blingResponse.linkDanfe || null,
+    payloadBling,
+    blingResponse
+  };
+}
+
 // 19.1 Emit NFC-e after payment
 app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
   const { number } = req.params;
   try {
-    // 1. Fetch orders
     const orders = await prisma.order.findMany({
       where: {
         comanda_number: number,
@@ -543,80 +611,15 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
       return res.status(404).json({ error: 'Nenhum pedido pago encontrado para esta comanda.' });
     }
 
-    // 2. Aggregate items
-    const allItems = orders.flatMap(o => o.items);
-    
-    // Agrupa itens iguais (mesmo produto) para não gerar várias linhas do mesmo produto na NFC-e
-    const groupedItemsMap = {};
-    for (const item of allItems) {
-      const pid = item.product.id;
-      if (!groupedItemsMap[pid]) {
-        groupedItemsMap[pid] = { ...item };
-      } else {
-        groupedItemsMap[pid].quantity += item.quantity;
-      }
-    }
-    const mergedItems = Object.values(groupedItemsMap);
-
-    let totalAmount = 0;
-    
-    const nfeItens = mergedItems.map((item) => {
-      totalAmount += item.quantity * item.unit_price;
-      
-      return {
-        codigo: item.product.id.slice(0, 8), // Mapeando o ID/SKU local para o Bling
-        descricao: item.product.name, // A descrição é opcional se o SKU já estiver no Bling, mas ajuda na leitura
-        quantidade: item.quantity,
-        valor: item.unit_price
-      };
-    });
-
     const payment_method = req.body?.payment_method || 'dinheiro';
     
-    // Mapeamento das formas de pagamento conforme cadastrado no Bling:
-    // Dinheiro = 10490350, Pix = 10490356
-    let formaPagamentoBling = 10490350; 
-    if (payment_method === 'pix') formaPagamentoBling = 10490356;
-    // Debito e Credito não estão explicitamente cadastrados no Bling atual, 
-    // mas usando 10490350 (Dinheiro) como fallback para testes se necessário.
-
-    const today = new Date().toISOString().split('T')[0];
-    
-    const payloadBling = {
-      data: today,
-      dataPrevista: today,
-      dataSaida: today,
-      contato: {
-        id: 18252857321,
-        nome: "Consumidor Final"
-      },
-      itens: nfeItens,
-      parcelas: [
-        {
-          dataVencimento: today,
-          formaPagamento: {
-            id: formaPagamentoBling
-          },
-          valor: totalAmount
-        }
-      ]
-    };
-
-    console.log("=== PAYLOAD BLING NFC-e PRONTO PARA ENVIO ===");
-    console.log(JSON.stringify(payloadBling, null, 2));
-    
-    let blingResponse;
+    let result;
     try {
-      // Chama o novo serviço do Bling
-      blingResponse = await emitirNFCeBling(payloadBling);
+      result = await processBlingNfce(orders, payment_method);
     } catch (apiError) {
       console.error("Bling API Error:", apiError);
       return res.status(400).json({ error: apiError.message });
     }
-    
-    // O Bling retorna os dados da nota. Extrair ID e URL do PDF (se já gerado)
-    const nfce_access_key = blingResponse.numero || `bling-${Date.now()}`;
-    const linkDanfe = blingResponse.linkDanfe || null;
 
     await prisma.order.updateMany({
       where: {
@@ -625,16 +628,16 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
       },
       data: {
         nfce_emitted: true,
-        nfce_access_key: nfce_access_key
+        nfce_access_key: result.nfce_access_key
       }
     });
 
     res.json({ 
       success: true, 
-      nfce_access_key,
-      caminho_danfe: linkDanfe,
-      payload_gerado: payloadBling,
-      bling_response: blingResponse
+      nfce_access_key: result.nfce_access_key,
+      caminho_danfe: result.linkDanfe,
+      payload_gerado: result.payloadBling,
+      bling_response: result.blingResponse
     });
   } catch (error) {
     console.error(error);

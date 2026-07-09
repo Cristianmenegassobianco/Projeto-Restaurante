@@ -49,6 +49,7 @@ export default function Payment() {
   // Payment Options
   const [paymentMethod, setPaymentMethod] = useState('dinheiro'); // 'dinheiro' | 'pix' | 'cartao'
   const [receivedCash, setReceivedCash] = useState('');
+  const [autoEmitNfce, setAutoEmitNfce] = useState(true); // default to true
 
   // Simulators
   const [showPixModal, setShowPixModal] = useState(false);
@@ -305,7 +306,7 @@ export default function Payment() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           payment_method: method,
-          create_nfce: false
+          create_nfce: autoEmitNfce
         })
       });
 
@@ -866,6 +867,20 @@ export default function Payment() {
                           )}
                         </div>
                       )}
+
+                      {/* Checkbox para emissão automática de NFC-e */}
+                      <div style={{ background: 'var(--bg-dark)', padding: '12px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <input 
+                          type="checkbox" 
+                          id="autoEmitNfce" 
+                          checked={autoEmitNfce}
+                          onChange={(e) => setAutoEmitNfce(e.target.checked)}
+                          style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+                        />
+                        <label htmlFor="autoEmitNfce" style={{ fontSize: '0.9rem', color: 'white', cursor: 'pointer', userSelect: 'none' }}>
+                          Emitir NFC-e automaticamente ao concluir o pagamento
+                        </label>
+                      </div>
 
                       {/* Confirmar Pagamento Button */}
                       <button 
