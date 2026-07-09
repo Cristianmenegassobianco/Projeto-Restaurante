@@ -571,11 +571,13 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
       };
     });
 
+    const payment_method = req.body?.payment_method || 'dinheiro';
+    
     // Mapeamento básico de forma de pagamento para o Bling (ID 1 geralmente é Dinheiro no Bling)
     // Recomendado depois: buscar os IDs exatos de formaPagamento no seu painel do Bling
     let formaPagamentoBling = 1; 
-    if (payment_method === 'debito') formaPagamentoBling = 2;
-    if (payment_method === 'credito') formaPagamentoBling = 3;
+    if (payment_method === 'debito' || payment_method === 'debit') formaPagamentoBling = 2;
+    if (payment_method === 'credito' || payment_method === 'credit') formaPagamentoBling = 3;
     if (payment_method === 'pix') formaPagamentoBling = 4;
 
     const payloadBling = {
