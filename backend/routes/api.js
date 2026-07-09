@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
-import { emitirNFCe } from '../services/focusNfeService.js';
+import { authenticateBling, emitirNFCeBling } from '../services/blingService.js';
 
 export default function apiRoutes(prisma, io, jwt, JWT_SECRET) {
   const app = Router();
@@ -12,6 +12,19 @@ app.get('/', (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+// Bling OAuth2 Callback
+app.get('/api/bling/callback', async (req, res) => {
+  const { code } = req.query;
+  if (!code) return res.status(400).send('Código de autorização não fornecido.');
+  
+  try {
+    const tokens = await authenticateBling(code);
+    res.send(`<h1>Bling Autenticado com Sucesso!</h1><p>Pode fechar esta janela.</p><pre>${JSON.stringify(tokens, null, 2)}</pre>`);
+  } catch (error) {
+    res.status(500).send(`<h1>Erro ao autenticar no Bling</h1><p>${error.message}</p>`);
+  }
 });
 
 // 2. Menu (Categories with Products)
@@ -547,63 +560,55 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
 
     let totalAmount = 0;
     
-    const nfeItens = mergedItems.map((item, index) => {
+    const nfeItens = mergedItems.map((item) => {
       totalAmount += item.quantity * item.unit_price;
       
       return {
-        numero_item: (index + 1).toString(),
-        codigo_produto: item.product.id.slice(0, 8), // Apenas um identificador curto
-        descricao: item.product.name,
-        quantidade_comercial: item.quantity.toString(),
-        valor_unitario_comercial: item.unit_price.toFixed(2),
-        unidade_comercial: "UN",
-        quantidade_tributavel: item.quantity.toString(),
-        valor_unitario_tributavel: item.unit_price.toFixed(2),
-        unidade_tributavel: "UN",
-        cfop: item.product.cfop || "5101",
-        codigo_ncm: item.product.ncm || "00000000",
-        icms_origem: item.product.origem_mercadoria || "0",
-        icms_situacao_tributaria: item.product.csosn || "102"
+        codigo: item.product.id.slice(0, 8), // Mapeando o ID/SKU local para o Bling
+        descricao: item.product.name, // A descrição é opcional se o SKU já estiver no Bling, mas ajuda na leitura
+        quantidade: item.quantity,
+        valor: item.unit_price
       };
     });
 
-    // Assume-se que o pagamento seja em dinheiro (01) ou cartão, ajustaremos conforme necessário
-    // Por padrão enviando 01 (Dinheiro) para exemplo, ou pegando do pedido se tivéssemos mapeado:
-    const paymentMethodCode = "01"; // 01=Dinheiro, 03=Cartão de Crédito, 04=Cartão de Débito, etc
+    // Mapeamento básico de forma de pagamento para o Bling (ID 1 geralmente é Dinheiro no Bling)
+    // Recomendado depois: buscar os IDs exatos de formaPagamento no seu painel do Bling
+    let formaPagamentoBling = 1; 
+    if (payment_method === 'debito') formaPagamentoBling = 2;
+    if (payment_method === 'credito') formaPagamentoBling = 3;
+    if (payment_method === 'pix') formaPagamentoBling = 4;
 
-    if (!process.env.FOCUS_NFE_CNPJ) {
-      return res.status(400).json({ error: "Variável FOCUS_NFE_CNPJ não foi encontrada no ambiente (Railway ou .env)." });
-    }
-    const cleanCnpj = process.env.FOCUS_NFE_CNPJ.replace(/\D/g, '');
-
-    const payloadNFe = {
-      cnpj_emitente: cleanCnpj,
-      natureza_operacao: "Venda ao Consumidor",
-      data_emissao: new Date().toISOString(),
-      presenca_comprador: "1", // 1 = Operação presencial (Obrigatório para NFC-e)
-      modalidade_frete: "9", // 9 = Sem Ocorrência de Transporte (obrigatório para NFC-e)
+    const payloadBling = {
+      tipo: 2, // 2 = Saída
+      contato: {
+        nome: "Consumidor Final"
+      },
       itens: nfeItens,
-      pagamentos: [
+      parcelas: [
         {
-          forma_pagamento: paymentMethodCode,
-          valor_pagamento: totalAmount.toFixed(2)
+          formaPagamento: {
+            id: formaPagamentoBling
+          },
+          valor: totalAmount
         }
       ]
     };
 
-    console.log("=== PAYLOAD NFC-e PRONTO PARA ENVIO ===");
-    console.log(JSON.stringify(payloadNFe, null, 2));
+    console.log("=== PAYLOAD BLING NFC-e PRONTO PARA ENVIO ===");
+    console.log(JSON.stringify(payloadBling, null, 2));
     
-    const referencia = `comanda-${number}-${Date.now()}`;
-    let focusResponse;
+    let blingResponse;
     try {
-      focusResponse = await emitirNFCe(referencia, payloadNFe);
+      // Chama o novo serviço do Bling
+      blingResponse = await emitirNFCeBling(payloadBling);
     } catch (apiError) {
-      console.error("Focus API Error:", apiError);
+      console.error("Bling API Error:", apiError);
       return res.status(400).json({ error: apiError.message });
     }
     
-    const nfce_access_key = focusResponse.chave_nfe || focusResponse.referencia || referencia;
+    // O Bling retorna os dados da nota. Extrair ID e URL do PDF (se já gerado)
+    const nfce_access_key = blingResponse.numero || `bling-${Date.now()}`;
+    const linkDanfe = blingResponse.linkDanfe || null;
 
     await prisma.order.updateMany({
       where: {
@@ -618,11 +623,10 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
 
     res.json({ 
       success: true, 
-      nfce_access_key, 
-      status_nfe: focusResponse.status,
-      caminho_danfe: focusResponse.caminho_danfe || null,
-      payload_gerado: payloadNFe,
-      focus_response: focusResponse
+      nfce_access_key,
+      caminho_danfe: linkDanfe,
+      payload_gerado: payloadBling,
+      bling_response: blingResponse
     });
   } catch (error) {
     console.error(error);
