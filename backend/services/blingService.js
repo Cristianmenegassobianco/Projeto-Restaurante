@@ -114,8 +114,8 @@ export const fetchBlingApi = async (endpoint, options = {}) => {
 // Emitir NFC-e via Pedido de Venda -> Gerar Nota
 export const emitirNFCeBling = async (payload) => {
   // 1. Criar NFC-e no Bling
-  // A API V3 possui a rota POST /nfces
-  const response = await fetchBlingApi('/nfces', {
+  // A API V3 possui a rota POST /nfce
+  const response = await fetchBlingApi('/nfce', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
