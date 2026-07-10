@@ -1438,11 +1438,11 @@ export default function Payment() {
               maxHeight: '80vh', overflowY: 'auto', border: '1px dashed #ccc'
             }}>
               <div style={{ textAlign: 'center', marginBottom: '16px', borderBottom: '1px dashed #555', paddingBottom: '12px' }}>
-                <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>RESTAURANTE CMB DESIGN</div>
-                <div>CMB DESIGN ALIMENTOS LTDA</div>
-                <div>AVENIDA PAULISTA, 1000 - BELA VISTA</div>
-                <div>SÃO PAULO - SP - CEP: 01310-100</div>
-                <div>CNPJ: 12.345.678/0001-99 | IE: 111.222.333.444</div>
+                <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>CANTINA BIANCO</div>
+                <div>CANTINA BIANCO LTDA</div>
+                <div>RODOVIA LUIGI BIANCO, S/N - BARRACÃO</div>
+                <div>ORLEANS - SC - CEP: 88870-000</div>
+                <div>CNPJ: 67.163.173/0001-00 | IE: 264359852</div>
                 <div style={{ margin: '8px 0', fontSize: '0.85rem', fontWeight: 'bold' }}>
                   DANFE NFC-e - Documento Auxiliar da Nota Fiscal de Consumidor Eletrônica
                 </div>

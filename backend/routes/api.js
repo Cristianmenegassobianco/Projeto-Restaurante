@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
-import { authenticateBling, emitirNFCeBling, fetchBlingApi } from '../services/blingService.js';
+import { emitirNFCeTiny } from '../services/tinyService.js';
 
 export default function apiRoutes(prisma, io, jwt, JWT_SECRET) {
   const app = Router();
@@ -14,29 +14,6 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Bling OAuth2 Authorize
-app.get('/api/bling/authorize', (req, res) => {
-  const clientId = process.env.BLING_CLIENT_ID;
-  if (!clientId) {
-    return res.status(500).send('BLING_CLIENT_ID não configurado nas variáveis de ambiente.');
-  }
-  const state = Math.random().toString(36).substring(7);
-  const authUrl = `https://www.bling.com.br/Api/v3/oauth/authorize?response_type=code&client_id=${clientId}&state=${state}`;
-  res.redirect(authUrl);
-});
-
-// Bling OAuth2 Callback
-app.get('/api/bling/callback', async (req, res) => {
-  const { code } = req.query;
-  if (!code) return res.status(400).send('Código de autorização não fornecido.');
-  
-  try {
-    const tokens = await authenticateBling(code);
-    res.send(`<h1>Bling Autenticado com Sucesso!</h1><p>Pode fechar esta janela.</p><pre>${JSON.stringify(tokens, null, 2)}</pre>`);
-  } catch (error) {
-    res.status(500).send(`<h1>Erro ao autenticar no Bling</h1><p>${error.message}</p>`);
-  }
-});
 
 // 2. Menu (Categories with Products)
 app.get('/api/menu', async (req, res) => {
@@ -470,16 +447,16 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
     // 3. Emit NFC-e asynchronously if requested
     if (create_nfce) {
       // Fire and forget so we don't block the UI
-      processBlingNfce(ordersToPay, payment_method)
-        .then(async (blingResult) => {
+      processTinyNfce(ordersToPay, payment_method)
+        .then(async (tinyResult) => {
           await prisma.order.updateMany({
             where: { comanda_number: number, status: 'paid' },
             data: {
-              nfce_access_key: blingResult.nfce_access_key
+              nfce_access_key: tinyResult.nfce_access_key
             }
           });
           // Emitting event if clients are listening for async NFC-e updates
-          if (io) io.emit('nfce_generated', { comanda_number: number, nfce_access_key: blingResult.nfce_access_key, caminho_danfe: blingResult.linkDanfe });
+          if (io) io.emit('nfce_generated', { comanda_number: number, nfce_access_key: tinyResult.nfce_access_key, caminho_danfe: tinyResult.linkDanfe });
         })
         .catch(err => {
           console.error("Failed to emit NFC-e during payment async:", err);
@@ -545,7 +522,7 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
   }
 });
 
-async function processBlingNfce(orders, payment_method) {
+async function processTinyNfce(orders, payment_method) {
   // Aggregate items
   const allItems = orders.flatMap(o => o.items);
   const groupedItemsMap = {};
@@ -561,81 +538,53 @@ async function processBlingNfce(orders, payment_method) {
 
   let totalAmount = 0;
   
-  // 1. Obter os IDs internos do Bling usando os códigos SKU (para evitar tentar recadastrar os produtos)
-  const codigos = mergedItems.map(item => item.product.id.slice(0, 8));
-  let blingProductsMap = {};
-  
-  try {
-    const queryCodigos = codigos.map(c => `codigo[]=${c}`).join('&');
-    if (queryCodigos) {
-      const response = await fetchBlingApi(`/produtos?${queryCodigos}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.data && Array.isArray(data.data)) {
-          data.data.forEach(p => {
-            blingProductsMap[p.codigo] = p.id;
-          });
-        }
-      }
-    }
-  } catch (err) {
-    console.warn("Aviso: Falha ao buscar IDs dos produtos no Bling:", err.message);
-  }
-
   const nfeItens = mergedItems.map((item) => {
     totalAmount += item.quantity * item.unit_price;
     const sku = item.product.id.slice(0, 8);
     
-    let itemPayload = {
-      quantidade: item.quantity,
-      valor: item.unit_price,
-      descricao: item.product.name // fallback description
+    return {
+      item: {
+        codigo: sku,
+        descricao: item.product.name,
+        unidade: 'UN',
+        quantidade: item.quantity,
+        valor_unitario: item.unit_price
+      }
     };
-    
-    // Se achamos o ID do produto no Bling, nós vinculamos. Se não, tentamos apenas enviar o código.
-    if (blingProductsMap[sku]) {
-      itemPayload.produto = { id: blingProductsMap[sku] };
-    } else {
-      itemPayload.codigo = sku;
-    }
-    
-    return itemPayload;
   });
 
-  let formaPagamentoBling = 10490350; // Dinheiro default
-  if (payment_method === 'pix') formaPagamentoBling = 10490356;
+  // Forma de pagamento
+  // PIX = PIX, Dinheiro = Dinheiro
+  let formaPag = 'Dinheiro';
+  if (payment_method === 'pix') formaPag = 'PIX';
+  if (payment_method === 'credito') formaPag = 'Cartão de Crédito';
+  if (payment_method === 'debito') formaPag = 'Cartão de Débito';
 
-  const today = new Date().toISOString().split('T')[0];
-  
-  const payloadBling = {
-    data: today,
-    dataPrevista: today,
-    dataSaida: today,
-    contato: {
-      id: 18252857321,
+  const payloadTiny = {
+    cliente: {
       nome: "Consumidor Final"
     },
     itens: nfeItens,
     parcelas: [
       {
-        dataVencimento: today,
-        formaPagamento: {
-          id: formaPagamentoBling
-        },
-        valor: totalAmount
+        parcela: {
+          dias: 0,
+          valor: totalAmount,
+          forma_pagamento: formaPag
+        }
       }
     ]
   };
 
-  console.log("=== PAYLOAD BLING NFC-e PRONTO PARA ENVIO ===");
-  console.log(JSON.stringify(payloadBling, null, 2));
+  console.log("=== PAYLOAD TINY NFC-e PRONTO PARA ENVIO ===");
+  console.log(JSON.stringify(payloadTiny, null, 2));
   
-  const blingResponse = await emitirNFCeBling(payloadBling);
+  const tinyResponse = await emitirNFCeTiny(payloadTiny);
   return {
-    nfce_access_key: blingResponse.numero || `bling-${Date.now()}`,
-    linkDanfe: blingResponse.linkDanfe || null,
-    payloadBling,
-    blingResponse
+    nfce_access_key: tinyResponse.idNotaFiscal || `tiny-${Date.now()}`,
+    linkDanfe: tinyResponse.linkNfe || null,
+    payloadTiny,
+    tinyResponse
   };
 }
 
@@ -643,10 +592,21 @@ async function processBlingNfce(orders, payment_method) {
 app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
   const { number } = req.params;
   try {
+    // Find the latest paid order to get its table_session_id
+    const latestOrder = await prisma.order.findFirst({
+      where: { comanda_number: number, status: 'paid' },
+      orderBy: { created_at: 'desc' }
+    });
+
+    if (!latestOrder) {
+      return res.status(404).json({ error: 'Nenhum pedido pago encontrado para esta comanda.' });
+    }
+
     const orders = await prisma.order.findMany({
       where: {
         comanda_number: number,
-        status: 'paid'
+        status: 'paid',
+        table_session_id: latestOrder.table_session_id
       },
       include: {
         items: { include: { product: true } }
@@ -661,9 +621,9 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
     
     let result;
     try {
-      result = await processBlingNfce(orders, payment_method);
+      result = await processTinyNfce(orders, payment_method);
     } catch (apiError) {
-      console.error("Bling API Error:", apiError);
+      console.error("Tiny API Error:", apiError);
       return res.status(400).json({ error: apiError.message });
     }
 
@@ -682,8 +642,8 @@ app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
       success: true, 
       nfce_access_key: result.nfce_access_key,
       caminho_danfe: result.linkDanfe,
-      payload_gerado: result.payloadBling,
-      bling_response: result.blingResponse
+      payload_gerado: result.payloadTiny,
+      tiny_response: result.tinyResponse
     });
   } catch (error) {
     console.error(error);

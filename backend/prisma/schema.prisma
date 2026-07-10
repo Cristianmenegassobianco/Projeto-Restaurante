@@ -116,7 +116,3 @@ model CashSession {
   CashMovement    CashMovement[]
 }
 
-model SystemConfig {
-  key   String @id
-  value String
-}
