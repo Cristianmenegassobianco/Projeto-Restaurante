@@ -14,6 +14,17 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Bling OAuth2 Authorize
+app.get('/api/bling/authorize', (req, res) => {
+  const clientId = process.env.BLING_CLIENT_ID;
+  if (!clientId) {
+    return res.status(500).send('BLING_CLIENT_ID não configurado nas variáveis de ambiente.');
+  }
+  const state = Math.random().toString(36).substring(7);
+  const authUrl = \`https://www.bling.com.br/Api/v3/oauth/authorize?response_type=code&client_id=\${clientId}&state=\${state}\`;
+  res.redirect(authUrl);
+});
+
 // Bling OAuth2 Callback
 app.get('/api/bling/callback', async (req, res) => {
   const { code } = req.query;
