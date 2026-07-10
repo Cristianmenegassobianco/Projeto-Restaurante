@@ -554,7 +554,9 @@ async function processTinyNfce(orders, payment_method) {
           forma_pagamento: formaPag
         }
       }
-    ]
+    ],
+    situacao: "aprovado",
+    numero_ecommerce: orders.length > 0 ? `COMANDA-${orders[0].comanda_number}` : `PEDIDO-${Date.now()}`
   };
 
   console.log("=== PAYLOAD TINY NFC-e PRONTO PARA ENVIO ===");
