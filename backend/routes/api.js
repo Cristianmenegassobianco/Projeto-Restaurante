@@ -444,26 +444,6 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
 
     const totalAmount = ordersToPay.reduce((acc, order) => acc + order.total_amount, 0);
 
-    // 3. Emit NFC-e asynchronously if requested
-    if (create_nfce) {
-      // Fire and forget so we don't block the UI
-      processTinyNfce(ordersToPay, payment_method)
-        .then(async (tinyResult) => {
-          await prisma.order.updateMany({
-            where: { comanda_number: number, status: 'paid' },
-            data: {
-              nfce_access_key: tinyResult.nfce_access_key
-            }
-          });
-          // Emitting event if clients are listening for async NFC-e updates
-          if (io) io.emit('nfce_generated', { comanda_number: number, nfce_access_key: tinyResult.nfce_access_key, caminho_danfe: tinyResult.linkDanfe });
-        })
-        .catch(err => {
-          console.error("Failed to emit NFC-e during payment async:", err);
-          if (io) io.emit('nfce_failed', { comanda_number: number, error: err.message });
-        });
-    }
-
     // 4. Update the orders in database
     const updated = await prisma.order.updateMany({
       where: {
@@ -473,7 +453,7 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
       data: {
         status: 'paid',
         payment_method,
-        nfce_emitted: create_nfce,
+        nfce_emitted: false,
         nfce_access_key: null
       }
     });
@@ -592,21 +572,13 @@ async function processTinyNfce(orders, payment_method) {
 app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
   const { number } = req.params;
   try {
-    // Find the latest paid order to get its table_session_id
-    const latestOrder = await prisma.order.findFirst({
-      where: { comanda_number: number, status: 'paid' },
-      orderBy: { created_at: 'desc' }
-    });
-
-    if (!latestOrder) {
-      return res.status(404).json({ error: 'Nenhum pedido pago encontrado para esta comanda.' });
-    }
-
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const orders = await prisma.order.findMany({
       where: {
         comanda_number: number,
         status: 'paid',
-        table_session_id: latestOrder.table_session_id
+        nfce_emitted: false,
+        created_at: { gte: oneDayAgo }
       },
       include: {
         items: { include: { product: true } }

@@ -305,8 +305,7 @@ export default function Payment() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          payment_method: method,
-          create_nfce: autoEmitNfce
+          payment_method: method
         })
       });
 
@@ -874,19 +873,7 @@ export default function Payment() {
                         </div>
                       )}
 
-                      {/* Checkbox para emissão automática de NFC-e */}
-                      <div style={{ background: 'var(--bg-dark)', padding: '12px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <input 
-                          type="checkbox" 
-                          id="autoEmitNfce" 
-                          checked={autoEmitNfce}
-                          onChange={(e) => setAutoEmitNfce(e.target.checked)}
-                          style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
-                        />
-                        <label htmlFor="autoEmitNfce" style={{ fontSize: '0.9rem', color: 'white', cursor: 'pointer', userSelect: 'none' }}>
-                          Emitir NFC-e automaticamente ao concluir o pagamento
-                        </label>
-                      </div>
+
 
                       {/* Confirmar Pagamento Button */}
                       <button 
