@@ -21,7 +21,7 @@ app.get('/api/bling/authorize', (req, res) => {
     return res.status(500).send('BLING_CLIENT_ID não configurado nas variáveis de ambiente.');
   }
   const state = Math.random().toString(36).substring(7);
-  const authUrl = \`https://www.bling.com.br/Api/v3/oauth/authorize?response_type=code&client_id=\${clientId}&state=\${state}\`;
+  const authUrl = `https://www.bling.com.br/Api/v3/oauth/authorize?response_type=code&client_id=${clientId}&state=${state}`;
   res.redirect(authUrl);
 });
 
