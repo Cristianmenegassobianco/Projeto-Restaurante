@@ -20,8 +20,9 @@ export const emitirNFCeTiny = async (payload) => {
   });
 
   const json = await response.json();
-  if (json.retorno.status === 'Erro') {
-    throw new Error(`Erro ao criar Pedido no Tiny: ${JSON.stringify(json.retorno.erros)}`);
+  if (json.retorno.status === 'Erro' || json.retorno.status_processamento === 1 || json.retorno.status_processamento === '1') {
+    const errorMsg = json.retorno.erros ? JSON.stringify(json.retorno.erros) : JSON.stringify(json.retorno);
+    throw new Error(`Erro ao criar Pedido no Tiny: ${errorMsg}`);
   }
 
   // O Tiny retorna: registros: { registro: { id: "123", numero: "456" } }
