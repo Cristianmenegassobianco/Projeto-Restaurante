@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
-import { authenticateBling, emitirNFCeBling } from '../services/blingService.js';
+import { authenticateBling, emitirNFCeBling, fetchBlingApi } from '../services/blingService.js';
 
 export default function apiRoutes(prisma, io, jwt, JWT_SECRET) {
   const app = Router();
@@ -560,14 +560,46 @@ async function processBlingNfce(orders, payment_method) {
   const mergedItems = Object.values(groupedItemsMap);
 
   let totalAmount = 0;
+  
+  // 1. Obter os IDs internos do Bling usando os códigos SKU (para evitar tentar recadastrar os produtos)
+  const codigos = mergedItems.map(item => item.product.id.slice(0, 8));
+  let blingProductsMap = {};
+  
+  try {
+    const queryCodigos = codigos.map(c => `codigo[]=${c}`).join('&');
+    if (queryCodigos) {
+      const response = await fetchBlingApi(`/produtos?${queryCodigos}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data && Array.isArray(data.data)) {
+          data.data.forEach(p => {
+            blingProductsMap[p.codigo] = p.id;
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Aviso: Falha ao buscar IDs dos produtos no Bling:", err.message);
+  }
+
   const nfeItens = mergedItems.map((item) => {
     totalAmount += item.quantity * item.unit_price;
-    return {
-      codigo: item.product.id.slice(0, 8),
-      descricao: item.product.name,
+    const sku = item.product.id.slice(0, 8);
+    
+    let itemPayload = {
       quantidade: item.quantity,
-      valor: item.unit_price
+      valor: item.unit_price,
+      descricao: item.product.name // fallback description
     };
+    
+    // Se achamos o ID do produto no Bling, nós vinculamos. Se não, tentamos apenas enviar o código.
+    if (blingProductsMap[sku]) {
+      itemPayload.produto = { id: blingProductsMap[sku] };
+    } else {
+      itemPayload.codigo = sku;
+    }
+    
+    return itemPayload;
   });
 
   let formaPagamentoBling = 10490350; // Dinheiro default
