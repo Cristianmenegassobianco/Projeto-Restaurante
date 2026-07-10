@@ -486,7 +486,7 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
         status: 'paid',
         payment_method,
         nfce_emitted: create_nfce,
-        nfce_access_key: nfce_access_key
+        nfce_access_key: null
       }
     });
 
