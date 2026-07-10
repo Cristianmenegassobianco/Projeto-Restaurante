@@ -316,6 +316,7 @@ export default function Payment() {
           orders: [...orders],
           totalAmount: totalAmount,
           paymentMethod: method,
+          order_ids: paymentData.order_ids || [],
           nfce_emitted: paymentData.nfce_emitted,
           nfce_access_key: paymentData.nfce_access_key,
           caminho_danfe: paymentData.caminho_danfe,
@@ -391,7 +392,9 @@ export default function Payment() {
     
     try {
       const res = await fetch(`/api/comandas/${lastPaymentInfo.comandaNumber}/emit-nfce`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_ids: lastPaymentInfo.order_ids || [] })
       });
       if (res.ok) {
         const data = await res.json();

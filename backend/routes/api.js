@@ -494,7 +494,8 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
       count: updated.count,
       total_amount: totalAmount,
       payment_method,
-      nfce_emitted: create_nfce
+      order_ids: ordersToPay.map(o => o.id),
+      nfce_emitted: false
     });
   } catch (error) {
     console.error(error);
@@ -572,14 +573,16 @@ async function processTinyNfce(orders, payment_method) {
 app.post('/api/comandas/:number/emit-nfce', async (req, res) => {
   const { number } = req.params;
   try {
+    const order_ids = req.body?.order_ids || [];
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    
+    // Se order_ids vier vazio, tenta pelo comportamento antigo de puxar pendentes nas ultimas 24h
+    const whereClause = order_ids.length > 0 
+      ? { id: { in: order_ids } } 
+      : { comanda_number: number, status: 'paid', nfce_emitted: false, created_at: { gte: oneDayAgo } };
+
     const orders = await prisma.order.findMany({
-      where: {
-        comanda_number: number,
-        status: 'paid',
-        nfce_emitted: false,
-        created_at: { gte: oneDayAgo }
-      },
+      where: whereClause,
       include: {
         items: { include: { product: true } }
       }
