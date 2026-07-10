@@ -1,26 +1,26 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const TOKEN_PATH = path.join(__dirname, '../bling_tokens.json');
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
 const BLING_CLIENT_ID = process.env.BLING_CLIENT_ID;
 const BLING_CLIENT_SECRET = process.env.BLING_CLIENT_SECRET;
 const BLING_OAUTH_URL = 'https://www.bling.com.br/Api/v3';
 const BLING_API_URL = 'https://api.bling.com.br/Api/v3';
 
-// Carrega os tokens do arquivo JSON local (para persistência simples)
-export const getBlingTokens = () => {
-  if (fs.existsSync(TOKEN_PATH)) {
-    return JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf-8'));
+// Carrega os tokens do banco de dados para persistência garantida no Railway
+export const getBlingTokens = async () => {
+  const config = await prisma.systemConfig.findUnique({ where: { key: 'bling_tokens' } });
+  if (config && config.value) {
+    return JSON.parse(config.value);
   }
   return null;
 };
 
-export const saveBlingTokens = (tokens) => {
-  fs.writeFileSync(TOKEN_PATH, JSON.stringify(tokens, null, 2));
+export const saveBlingTokens = async (tokens) => {
+  await prisma.systemConfig.upsert({
+    where: { key: 'bling_tokens' },
+    update: { value: JSON.stringify(tokens) },
+    create: { key: 'bling_tokens', value: JSON.stringify(tokens) }
+  });
 };
 
 // Autentica via Authorization Code (Callback)
@@ -46,13 +46,13 @@ export const authenticateBling = async (code) => {
   }
 
   const data = await response.json();
-  saveBlingTokens(data);
+  await saveBlingTokens(data);
   return data;
 };
 
 // Renova o token de acesso
 export const refreshTokenBling = async () => {
-  const tokens = getBlingTokens();
+  const tokens = await getBlingTokens();
   if (!tokens || !tokens.refresh_token) {
     throw new Error('Não há refresh_token salvo. É necessário autenticar novamente.');
   }
@@ -78,13 +78,13 @@ export const refreshTokenBling = async () => {
   }
 
   const data = await response.json();
-  saveBlingTokens(data);
+  await saveBlingTokens(data);
   return data.access_token;
 };
 
 // Função genérica para requisições na API V3 com auto-refresh
 export const fetchBlingApi = async (endpoint, options = {}) => {
-  let tokens = getBlingTokens();
+  let tokens = await getBlingTokens();
   if (!tokens) throw new Error('Bling não autenticado.');
 
   let url = `${BLING_API_URL}${endpoint}`;

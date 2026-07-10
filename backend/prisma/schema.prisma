@@ -115,3 +115,8 @@ model CashSession {
   operator_name   String         @default("Operador")
   CashMovement    CashMovement[]
 }
+
+model SystemConfig {
+  key   String @id
+  value String
+}
