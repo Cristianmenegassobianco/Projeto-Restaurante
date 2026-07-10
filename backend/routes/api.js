@@ -456,19 +456,24 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
 
     const totalAmount = ordersToPay.reduce((acc, order) => acc + order.total_amount, 0);
 
-    // 3. Emit NFC-e if requested
-    let nfce_access_key = null;
-    let caminho_danfe = null;
+    // 3. Emit NFC-e asynchronously if requested
     if (create_nfce) {
-      try {
-        const blingResult = await processBlingNfce(ordersToPay, payment_method);
-        nfce_access_key = blingResult.nfce_access_key;
-        caminho_danfe = blingResult.linkDanfe;
-      } catch (err) {
-        console.error("Failed to emit NFC-e during payment:", err);
-        // We do not block the payment if NFC-e fails, we just don't set nfce_emitted
-        create_nfce = false;
-      }
+      // Fire and forget so we don't block the UI
+      processBlingNfce(ordersToPay, payment_method)
+        .then(async (blingResult) => {
+          await prisma.order.updateMany({
+            where: { comanda_number: number, status: 'paid' },
+            data: {
+              nfce_access_key: blingResult.nfce_access_key
+            }
+          });
+          // Emitting event if clients are listening for async NFC-e updates
+          if (io) io.emit('nfce_generated', { comanda_number: number, nfce_access_key: blingResult.nfce_access_key, caminho_danfe: blingResult.linkDanfe });
+        })
+        .catch(err => {
+          console.error("Failed to emit NFC-e during payment async:", err);
+          if (io) io.emit('nfce_failed', { comanda_number: number, error: err.message });
+        });
     }
 
     // 4. Update the orders in database
@@ -512,7 +517,7 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
         status: 'paid',
         payment_method,
         nfce_emitted: create_nfce,
-        nfce_access_key: nfce_access_key
+        nfce_access_key: null
       });
     }
 
@@ -521,9 +526,7 @@ app.post('/api/comandas/:number/pay', async (req, res) => {
       count: updated.count,
       total_amount: totalAmount,
       payment_method,
-      nfce_emitted: create_nfce,
-      nfce_access_key,
-      caminho_danfe
+      nfce_emitted: create_nfce
     });
   } catch (error) {
     console.error(error);

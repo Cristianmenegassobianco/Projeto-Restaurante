@@ -733,9 +733,15 @@ export default function Payment() {
                   <Receipt size={18} /> Ver Comprovante (Simples)
                 </button>
                 {lastPaymentInfo.nfce_emitted ? (
-                  <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--success)' }} onClick={() => setShowFiscalReceipt(true)}>
-                    <Printer size={18} /> Ver Cupom Fiscal (NFC-e)
-                  </button>
+                  lastPaymentInfo.nfce_access_key ? (
+                    <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--success)' }} onClick={() => setShowFiscalReceipt(true)}>
+                      <Printer size={18} /> Ver Cupom Fiscal (NFC-e)
+                    </button>
+                  ) : (
+                    <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--border)', color: 'var(--text-muted)', cursor: 'not-allowed' }} disabled>
+                      <Clock size={18} /> NFC-e Processando...
+                    </button>
+                  )
                 ) : (
                   <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--success)' }} onClick={handleEmitNfce}>
                     <FileText size={18} /> Emitir Nota (NFC-e)

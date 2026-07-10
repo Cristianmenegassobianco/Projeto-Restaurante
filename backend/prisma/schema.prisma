@@ -15,6 +15,8 @@ model TableSession {
   opened_at    DateTime  @default(now())
   closed_at    DateTime?
   orders       Order[]
+
+  @@index([status])
 }
 
 model Category {
@@ -46,6 +48,8 @@ model Product {
   category          Category    @relation(fields: [category_id], references: [id])
   suggestedProducts Product[]   @relation("ProductSuggestions")
   suggestedBy       Product[]   @relation("ProductSuggestions")
+
+  @@index([category_id])
 }
 
 model Order {
@@ -61,6 +65,9 @@ model Order {
   nfce_access_key  String?
   table_session    TableSession @relation(fields: [table_session_id], references: [id])
   items            OrderItem[]
+
+  @@index([status])
+  @@index([comanda_number])
 }
 
 model OrderItem {
@@ -91,6 +98,8 @@ model CashMovement {
   description     String?
   created_at      DateTime    @default(now())
   CashSession     CashSession @relation(fields: [cash_session_id], references: [id])
+
+  @@index([cash_session_id])
 }
 
 model CashSession {
