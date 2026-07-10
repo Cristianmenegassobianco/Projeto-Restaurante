@@ -103,6 +103,19 @@ export default function cashRoutes(prisma) {
         return res.status(400).json({ error: 'Nenhum caixa aberto encontrado.' });
       }
 
+      // 1. Verificar se existem pedidos em aberto (não pagos nem cancelados)
+      const openOrdersCount = await prisma.order.count({
+        where: {
+          status: { notIn: ['paid', 'canceled'] }
+        }
+      });
+
+      if (openOrdersCount > 0) {
+        return res.status(400).json({ 
+          error: `Não é possível fechar o caixa. Existem ${openOrdersCount} pedido(s) em aberto no salão. Receba ou cancele todos os pedidos antes de prosseguir.` 
+        });
+      }
+
       const movements = await prisma.cashMovement.findMany({ where: { cash_session_id: activeSession.id } });
       let calculatedCash = activeSession.opening_value;
       for (const m of movements) {
@@ -124,6 +137,12 @@ export default function cashRoutes(prisma) {
           expected_cash: calculatedCash,
           difference_cash: difference
         }
+      });
+
+      // 3. Encerrar todas as sessões de mesa ativas para limpar o salão para o dia seguinte
+      await prisma.tableSession.updateMany({
+        where: { status: 'active' },
+        data: { status: 'closed', closed_at: new Date() }
       });
 
       res.json(closedSession);
